@@ -1,21 +1,30 @@
 {
-    "compilerOptions": {
-        "module": "CommonJS",
-        "esModuleInterop": true,
-        "target": "es5",
-        "noImplicitAny": false,
-        "moduleResolution": "node",
-        "removeComments": true,
-        "strict": true,
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "outDir": "dist",
-        "baseUrl": ".",
-        "paths": {
-            "*": ["node_modules/*", "src/types/*"]
-        },
-        "lib": ["ESNext"]
+  "compilerOptions": {
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "target": "ES5",
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "removeComments": true,
+    "strict": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*",
+        "src/types/*"
+      ]
     },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules"]
+    "lib": [
+      "ESNext",
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

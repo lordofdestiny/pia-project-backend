@@ -1,7 +1,13 @@
-import app from "./app";
-import { createServer } from "http";
 import os from "os";
+import http from "http";
+import mongoose from "mongoose";
 
+import app from "./app";
+import MongooseConnect from "./utils/mongoose-connect";
+
+const port = process.env.PORT ?? 3000;
+
+// Get local IPv4 address of the machine
 const networkInterfacesDict = os.networkInterfaces();
 const ipv4 = Object.keys(networkInterfacesDict)
     .map((key) => networkInterfacesDict[key]!)
@@ -10,9 +16,19 @@ const ipv4 = Object.keys(networkInterfacesDict)
     .filter(({ internal }) => !internal)
     .map(({ address }) => address);
 
-const port = process.env.PORT ?? 3000;
+// Setup MongoDB connection
+const mongoDBConnectionDetails = MongooseConnect.getConnectionDetailsFromEnv();
+const mongooseConnectionURI = MongooseConnect.buildConnectionURI(mongoDBConnectionDetails);
+MongooseConnect.initialize();
 
-const server = createServer(app);
-server.listen(port, () => {
+const server = http.createServer(app);
+
+server.listen(port, async () => {
     console.log(`Express server running on ${ipv4}:${port}`);
+    try {
+        await MongooseConnect.connect(mongooseConnectionURI);
+        console.log(`Connected to MongoDB as <${mongoose.connection.user ?? "local dev"}>`);
+    } catch (err) {
+        console.log(`Error connecting to MongoDB: ${err}`);
+    }
 });
