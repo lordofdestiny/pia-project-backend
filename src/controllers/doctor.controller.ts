@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { MongooseError } from "mongoose";
+import { HydratedDocument, MongooseError } from "mongoose";
 import Doctor, { IDoctor } from "../models/doctor";
-import { mongooseErrorHandler } from "../utils/error-handler";
-import "../utils/string-utils";
+import { UserModel, IUser } from "../models/user";
 
 export default class DoctorController {
     public static async register(
@@ -13,9 +12,13 @@ export default class DoctorController {
         const { body: data } = request;
         try {
             const user = await Doctor.create(data);
-            response
-                .status(201)
-                .json(Object.assign(user.toObject(), { _id: undefined, password: undefined }));
+            response.status(201).json(
+                Object.assign(user.toObject(), {
+                    _id: undefined,
+                    password: undefined,
+                    salt: undefined,
+                })
+            );
         } catch (err) {
             next(err);
         }

@@ -1,9 +1,8 @@
-import express, { Router } from "express";
+import { Router } from "express";
 import DoctorController from "../controllers/doctor.controller";
-import { serverErrorHandler } from "../utils/error-handler";
 
-const doctorRouter = Router();
+const DoctorRouter = Router();
 
-doctorRouter.route("/register").post(DoctorController.register);
+DoctorRouter.route("/register").post(DoctorController.register);
 
-export default doctorRouter;
+export default DoctorRouter;

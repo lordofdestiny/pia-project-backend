@@ -1,11 +1,9 @@
 import { Schema, Model } from "mongoose";
-import User, { IUser } from "./user";
+import { UserModel, IUser, IUserMethods } from "./user";
 
 export interface IPatient extends IUser {}
 
-interface IPatientMethods {
-    // comparePassword: (password: string) => Promise<boolean>;
-}
+interface IPatientMethods extends IUserMethods {}
 
 type PatientModel = Model<IPatient, {}, IPatientMethods>;
 
@@ -16,4 +14,4 @@ const parientSchema = new Schema<IPatient, PatientModel, IPatientMethods>(
     }
 );
 
-export default User.discriminator("Patient", parientSchema, "Patient");
+export default UserModel.discriminator("Patient", parientSchema, "Patient");

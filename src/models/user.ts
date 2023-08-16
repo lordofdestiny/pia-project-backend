@@ -1,9 +1,16 @@
-import { Schema, Model, model, Document, CallbackError } from "mongoose";
+import { Schema, Model, model, Document, CallbackError, Types } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import "../utils/string-utils";
+
+export enum EUserRole {
+    User = "User",
+    Patient = "Patient",
+    Doctor = "Doctor",
+    Manager = "Manager",
+}
 
 export interface IUser {
+    _id: Types.ObjectId;
     username: string;
     password: string;
     first_name: string;
@@ -12,10 +19,11 @@ export interface IUser {
     phone: string;
     email: string;
     profile_picture: string;
-    role: string;
+    type: EUserRole;
+    salt: string;
 }
 
-interface IUserMethods {
+export interface IUserMethods {
     comparePassword: (password: string) => Promise<boolean>;
 }
 
@@ -30,10 +38,28 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
             unique: true,
             minlength: [4, "Username must be at least 6 characters long"],
             maxlength: [20, "Username must be at most 20 characters long"],
+            validate: {
+                validator: async function (this: Document<IUser>, username: string) {
+                    return !(await this.$model("User").countDocuments({
+                        username,
+                    }));
+                },
+                message: () => "Username already exists",
+            },
         },
-        password: {
+        email: {
             type: String,
-            required: [true, "Password is required"],
+            required: [true, "Email is required"],
+            match: /^[\w-](?:\.?[\w-]){0,63}@[\w-]{1,63}(?:\.[\w-]{1,63})*$/,
+            unique: true,
+            validate: {
+                validator: async function (this: Document<IUser>, email: string) {
+                    return !(await this.$model("User").countDocuments({
+                        email,
+                    }));
+                },
+                message: () => "Email already exists",
+            },
         },
         first_name: {
             type: String,
@@ -52,42 +78,54 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
             required: [true, "Phone number is required"],
             match: /^((\+381)|0)?[\s-]*6[\s-]*(([0-6]|[8-9]|(7[\s-]*[7-8]))(?:[ -]*\d[ -]*){6,7})$/,
         },
-        email: {
-            type: String,
-            required: [true, "Email is required"],
-            match: /^[\w-](?:\.?[\w-]){0,63}@[\w-]{1,63}(?:\.[\w-]{1,63})*$/,
-            unique: true,
-        },
         profile_picture: {
             type: String,
             required: false,
             default: null,
         },
+        password: {
+            type: String,
+            required: [true, "Password is required"],
+        },
+        salt: {
+            type: String,
+            required: false,
+        },
+        type: {
+            type: String,
+            trim: true,
+            enum: Object.freeze(Object.values(EUserRole)),
+            required: [true, "User role is required"],
+            default: EUserRole.User,
+        },
     },
     {
         discriminatorKey: "type",
+        methods: {
+            async comparePassword(password: string) {
+                const digest = await this.digestPassword(password, this.salt);
+                const hash = await bcrypt.hash(digest, this.salt);
+                return bcrypt.compare(password, hash);
+            },
+        },
     }
 );
 
-userSchema.path("username").validate(async function (username: string) {
-    return (await this.$model("User").countDocuments({ username })) == 0;
-}, "Username already exists");
-
-userSchema.path("email").validate(async function (email: string) {
-    return (await this.$model("User").countDocuments({ email })) == 0;
-}, "Email already exists");
-
-export async function digestPassword(password: string, salt: string) {
-    return crypto.createHmac("sha256", salt).update(password).digest("hex");
+export async function digestAndBcryptPassword(
+    password: string,
+    salt: string,
+    algorithm = "sha256"
+) {
+    const digest = crypto.createHmac(algorithm, salt).update(password).digest("hex");
+    return bcrypt.hash(digest, salt);
 }
 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     if (this.password === undefined) return next(new Error("Password is required"));
     try {
-        const salt = await bcrypt.genSalt(10);
-        const digest = await digestPassword(this.password, salt);
-        this.password = await bcrypt.hash(digest, salt);
+        this.salt = await bcrypt.genSalt(10);
+        this.password = await digestAndBcryptPassword(this.password, this.salt);
         next();
     } catch (err) {
         next(err as CallbackError);
@@ -95,9 +133,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.method("comparePassword", async function (password: string) {
-    const digest = await digestPassword(password, this.salt);
-    const hash = await bcrypt.hash(digest, this.salt);
-    return bcrypt.compare(password, hash);
+    return bcrypt.compare(password, await digestAndBcryptPassword(password, this.salt));
 });
 
-export default model<IUser, UserModel>("User", userSchema, "users");
+export const UserModel = model<IUser, UserModel>("User", userSchema, "users");

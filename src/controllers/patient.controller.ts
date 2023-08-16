@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { MongooseError } from "mongoose";
+import jwt from "jsonwebtoken";
+import { UserModel, IUser } from "../models/user";
 import Patient, { IPatient } from "../models/patient";
-import { mongooseErrorHandler } from "../utils/error-handler";
-import "../utils/string-utils";
 
 export default class PatientController {
     public static async register(
@@ -13,9 +13,13 @@ export default class PatientController {
         const { body: data } = request;
         try {
             const user = await Patient.create(data);
-            response
-                .status(201)
-                .json(Object.assign(user.toObject(), { _id: undefined, password: undefined }));
+            response.status(201).json(
+                Object.assign(user.toObject(), {
+                    _id: undefined,
+                    password: undefined,
+                    salt: undefined,
+                })
+            );
         } catch (err) {
             next(err);
         }
