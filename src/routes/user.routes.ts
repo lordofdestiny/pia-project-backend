@@ -10,6 +10,8 @@ userRouter.use("/patient", PatientRouter);
 userRouter.use("/doctor", DoctorRouter);
 
 // Common routes
+userRouter.post("/register", UserController.register);
 userRouter.post("/login", UserController.login);
+userRouter.post("/logout", UserController.logout);
 
 export default userRouter;

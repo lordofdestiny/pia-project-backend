@@ -24,12 +24,12 @@ app.use(passport.initialize());
 // Middlewares
 app.use(morgan("dev"));
 
-// Public files
-app.use(express.static(path.join(__dirname, "public")));
-
 // Request body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Public files
+app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
 app.get(

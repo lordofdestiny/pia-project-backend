@@ -11,6 +11,26 @@ interface ILoginBody {
 }
 
 export default class UserController {
+    public static async register(
+        request: Request<{}, {}, IPatient>,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { body: data } = request;
+        try {
+            const user = await Patient.create(data);
+            response.status(201).json(
+                Object.assign(user.toObject(), {
+                    _id: undefined,
+                    password: undefined,
+                    salt: undefined,
+                })
+            );
+        } catch (err) {
+            next(err);
+        }
+    }
+
     public static async login(
         { body: { email, password } = {} }: Request<{}, {}, ILoginBody>,
         response: Response,
@@ -35,5 +55,8 @@ export default class UserController {
         } catch (err) {
             next(err);
         }
+    }
+    public static async logout(request: Request, response: Response, next: NextFunction) {
+        response.status(200).json({ message: "ok" });
     }
 }
