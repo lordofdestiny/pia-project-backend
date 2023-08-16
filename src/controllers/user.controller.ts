@@ -19,13 +19,7 @@ export default class UserController {
         const { body: data } = request;
         try {
             const user = await Patient.create(data);
-            response.status(201).json(
-                Object.assign(user.toObject(), {
-                    _id: undefined,
-                    password: undefined,
-                    salt: undefined,
-                })
-            );
+            response.status(201).json(user.toObject());
         } catch (err) {
             next(err);
         }
@@ -47,8 +41,8 @@ export default class UserController {
             if (!user.comparePassword(password)) {
                 return response.status(401).json({ message: "invalid credentials" });
             }
-            const id = user._id.toString();
-            const token = jwt.sign({ id, email }, process.env.JWT_SECRET!, {
+            const { id, username } = user.toObject();
+            const token = jwt.sign({ id, email, username }, process.env.JWT_SECRET!, {
                 expiresIn: 60 * 60, // 1 hour+
             });
             response.status(200).json({ message: "ok", token });

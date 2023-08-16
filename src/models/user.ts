@@ -10,17 +10,18 @@ export enum EUserRole {
 }
 
 export interface IUser {
-    _id: Types.ObjectId;
+    id?: String;
+    _id?: Types.ObjectId;
+    email: string;
     username: string;
-    password: string;
     first_name: string;
     last_name: string;
-    address: string;
     phone: string;
-    email: string;
+    address: string;
     profile_picture: string;
+    salt?: string;
+    password?: string;
     type: EUserRole;
-    salt: string;
 }
 
 export interface IUserMethods {
@@ -132,8 +133,14 @@ userSchema.pre("save", async function (next) {
     }
 });
 
-userSchema.method("comparePassword", async function (password: string) {
-    return bcrypt.compare(password, await digestAndBcryptPassword(password, this.salt));
+userSchema.set("toObject", {
+    transform: (_: unknown, result: IUser) => {
+        result.id = result._id!.toString();
+        delete result._id;
+        delete result.password;
+        delete result.salt;
+        return result;
+    },
 });
 
 export const UserModel = model<IUser, UserModel>("User", userSchema, "users");

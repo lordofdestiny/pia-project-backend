@@ -14,6 +14,7 @@ import {
 } from "./middleware/error-handler";
 
 import JWTStrategy from "./strategies/jwt";
+import { IUser } from "./models/user";
 
 const app: Express = express();
 
@@ -32,11 +33,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Routers
+// how to verify jwt token
 app.get(
     "/secret",
     passport.authenticate("jwt", { session: false, assignProperty: "user" }),
     ({ user }: Request, response: Response) => {
-        const { first_name, last_name } = user!;
+        const { first_name, last_name } = user as IUser;
         const fullName = `${first_name} ${last_name}`.toTitleCase();
         response.json({ message: `success! Hello, ${fullName}!` });
     }
