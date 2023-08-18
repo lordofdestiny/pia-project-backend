@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
+import { relativizePicturePath } from "../utils/util";
 import { Schema, Model, model, Document, CallbackError, Types, HydratedDocument } from "mongoose";
 
 export enum EUserRole {
@@ -18,6 +19,7 @@ export interface SessionUser {
     last_name: string;
     phone: string;
     address: string;
+    profile_picture: string;
     type: EUserRole;
 }
 
@@ -30,6 +32,7 @@ export const session_fields: (keyof SessionUser)[] = [
     "type",
     "address",
     "phone",
+    "profile_picture",
 ];
 
 declare global {
@@ -48,7 +51,9 @@ export interface IUserMethods {
     comparePassword: (password: string) => Promise<boolean>;
 }
 
-export interface IUserVirtuals {}
+export interface IUserVirtuals {
+    get relative_profile_picture(): string;
+}
 
 type TUserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
 
@@ -149,7 +154,13 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.set("toObject", {
-    transform: (doc: HydratedDocument<IUser, IUserMethods>, result: IUser) => {
+    transform: (
+        doc: HydratedDocument<IUser, IUserMethods>,
+        result: IUser & { _id?: Types.ObjectId }
+    ) => {
+        result.id = result._id?.toString()!;
+        delete result._id;
+        result.profile_picture = relativizePicturePath(result.profile_picture);
         delete result.password;
         delete result.salt;
         return result;

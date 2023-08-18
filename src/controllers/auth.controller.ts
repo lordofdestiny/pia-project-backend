@@ -15,10 +15,10 @@ export default class AuthController {
         passport.authenticate("local_default", (err, user, info) => {
             if (err) return next(err);
             if (!user) {
-                return response.status(401).json(info);
+                return response.status(401).send(info.message);
             }
             if (request.isAuthenticated?.()) {
-                return response.status(409).json({ message: "already logged in" });
+                return response.status(409).json("already logged in");
             } else {
                 request.logIn(user, (err) => {
                     if (err) return next(err);
@@ -46,8 +46,7 @@ export default class AuthController {
     }
 
     public static async logout(request: Request, response: Response, next: NextFunction) {
-        if (!request.isAuthenticated())
-            return response.status(401).json({ message: "unauthorized" });
+        if (!request.isAuthenticated()) return response.sendStatus(401);
         request.logout(
             {
                 keepSessionInfo: false,
@@ -69,7 +68,7 @@ export default class AuthController {
         next: NextFunction
     ) {
         if (!request.isAuthenticated()) {
-            return response.status(401).json({ message: "unauthorized" });
+            return response.sendStatus(401);
         }
         const {
             user: { id },

@@ -1,18 +1,16 @@
-import { Router } from "express";
-import AuthController from "../controllers/auth.controller";
+import express, { Router } from "express";
+import path from "path";
 import PatientRouter from "./patient.routes";
 import DoctorRouter from "./doctor.routes";
-import passport from "passport";
 import { Authenticator } from "../utils/authenticate";
 import { EUserRole } from "../models/user";
-import AuthRouter from "./auth.routes";
 import ManagerRouter from "./manager.routes";
 
-const userRouter = Router();
+const UserRouter = Router();
 
 // Import routers
-userRouter.use("/patient", Authenticator.authenticate([EUserRole.PATIENT]), PatientRouter);
-userRouter.use("/doctor", Authenticator.authenticate([EUserRole.DOCTOR]), DoctorRouter);
-userRouter.use("/manager", Authenticator.authenticate([EUserRole.MANAGER]), ManagerRouter);
+UserRouter.use("/patient", Authenticator.authenticate([EUserRole.PATIENT]), PatientRouter);
+UserRouter.use("/doctor", Authenticator.authenticate([EUserRole.DOCTOR]), DoctorRouter);
+UserRouter.use("/manager", Authenticator.authenticate([EUserRole.MANAGER]), ManagerRouter);
 
-export default userRouter;
+export default UserRouter;

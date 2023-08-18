@@ -85,5 +85,5 @@ export async function serverErrorHandler(
     response: Response,
     next: NextFunction
 ) {
-    response.status(500).send("500: Internal Server Error");
+    response.sendStatus(500);
 }

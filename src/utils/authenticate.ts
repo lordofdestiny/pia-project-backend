@@ -1,10 +1,7 @@
-import mongoose, { LeanDocument, Model } from "mongoose";
 import { EUserRole, IUser, UserModel } from "../models/user";
 import { Strategy } from "passport-local";
-import passport from "passport";
 import { NextFunction, Request, Response } from "express";
 import { ManagerModel } from "../models/manager";
-
 export class Authenticator {
     public static readonly nonAdminStrategy = new Strategy(
         { usernameField: "email" },
@@ -26,7 +23,7 @@ export class Authenticator {
                 message: "incorrect password",
             });
         }
-        return done(null, user);
+        return done(null, user.toObject());
     }
 
     private static async verifyNonAdmin(email, password, done) {
@@ -40,7 +37,7 @@ export class Authenticator {
 
     private static async verifyAdmin(email, password, done) {
         try {
-            const user = await ManagerModel.findOne({ email, $nor: [{ type: "manager" }] });
+            const user = await ManagerModel.findOne({ email });
             this.handleVerify(password, user, done);
         } catch (err) {
             return done(err);
@@ -50,10 +47,13 @@ export class Authenticator {
     static authenticate(user_types: EUserRole[]) {
         return (request: Request, response: Response, next: NextFunction) => {
             if (!request.isAuthenticated()) {
-                return response.status(401).json({ message: "unauthorized" });
+                return response.sendStatus(401);
             }
-            if (!user_types.includes(EUserRole.USER) && !user_types.includes(request.user.type)) {
-                return response.status(403).json({ message: "forbidden" });
+            if (
+                !user_types.includes("user" as EUserRole) &&
+                !user_types.includes(request.user.type)
+            ) {
+                return response.sendStatus(403);
             }
             return next();
         };
