@@ -1,5 +1,5 @@
 import { Schema, Model } from "mongoose";
-import { UserModel, IUser, IUserMethods } from "./user";
+import { UserModel, IUser, IUserMethods, EUserRole } from "./user";
 
 export interface IManager extends IUser {}
 
@@ -14,4 +14,4 @@ const managerSchema = new Schema<IManager, ManagerModel, IManagerMethods>(
     }
 );
 
-export default UserModel.discriminator("Manager", managerSchema, "Manager");
+export default UserModel.discriminator("Manager", managerSchema, EUserRole.MANAGER);

@@ -1,5 +1,5 @@
 import { Schema, Model } from "mongoose";
-import { UserModel, IUser, IUserMethods } from "./user";
+import { UserModel, IUser, IUserMethods, EUserRole } from "./user";
 
 export interface IDoctor extends IUser {
     licence_number: string;
@@ -31,4 +31,4 @@ const doctorSchema = new Schema<IDoctor, DoctorModel, IDoctorMethods>(
     }
 );
 
-export default UserModel.discriminator("Doctor", doctorSchema, "Doctor");
+export default UserModel.discriminator("Doctor", doctorSchema, EUserRole.DOCTOR);

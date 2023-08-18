@@ -1,11 +1,12 @@
 import path from "path";
 import morgan from "morgan";
 import passport from "passport";
+import session from "express-session";
+import MongoStore from "connect-mongo";
 import express, { Express, Request, Response } from "express";
 
 // Make sure to import the string utils to extend the String prototype
 
-import userRouter from "./routes/user.routes";
 import {
     notFoundErrorHandler,
     validationErrorHandler,
@@ -13,14 +14,59 @@ import {
     serverErrorHandler,
 } from "./middleware/error-handler";
 
-import JWTStrategy from "./strategies/jwt";
-import { IUser } from "./models/user";
+import { EUserRole, IUser } from "./models/user";
+import { Authenticator } from "./utils/authenticate";
+import MongooseConnect from "./utils/mongoose-connect";
+import UserRouter from "./routes/user.routes";
+import AuthRouter from "./routes/auth.routes";
 
 const app: Express = express();
 
+// Enable sessions
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET!,
+        saveUninitialized: false,
+        resave: false,
+        rolling: true,
+        store: new MongoStore({
+            mongoUrl: MongooseConnect.getConnectionURI(),
+            autoRemove: "interval",
+            ttl: 60 * 60 * 1000, // 1 hour
+        }),
+    })
+);
+
 //Initialize passport
-passport.use(JWTStrategy);
+for (const type of Object.values(EUserRole)) {
+    passport.use(...Authenticator.getStrategy(type));
+}
+declare global {
+    namespace Express {
+        interface User {
+            id: string;
+            username: string;
+            email: string;
+            first_name: string;
+            last_name: string;
+            type: EUserRole;
+        }
+    }
+}
+
+passport.serializeUser((user: Express.User, done) => {
+    process.nextTick(() => {
+        const { id, username, email, first_name, last_name, type } = user as IUser;
+        done(null, { id, username, email, first_name, last_name, type });
+    });
+});
+passport.deserializeUser((user: Express.User, done) => {
+    process.nextTick(() => {
+        done(null, user);
+    });
+});
 app.use(passport.initialize());
+app.use(passport.session());
 
 // Middlewares
 app.use(morgan("dev"));
@@ -36,15 +82,16 @@ app.use(express.static(path.join(__dirname, "public")));
 // how to verify jwt token
 app.get(
     "/secret",
-    passport.authenticate("jwt", { session: false, assignProperty: "user" }),
-    ({ user }: Request, response: Response) => {
-        const { first_name, last_name } = user as IUser;
+    Authenticator.authenticate([EUserRole.USER]),
+    (request: Request, response: Response) => {
+        const { first_name, last_name } = request.user as IUser;
         const fullName = `${first_name} ${last_name}`.toTitleCase();
         response.json({ message: `success! Hello, ${fullName}!` });
     }
 );
 
-app.use("/user", userRouter);
+app.use("/user", UserRouter);
+app.use("/auth", AuthRouter);
 
 // Error handlers
 app.use(notFoundErrorHandler);

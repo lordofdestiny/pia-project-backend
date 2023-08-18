@@ -3,9 +3,9 @@ import http from "http";
 import { resolve } from "path";
 import mongoose from "mongoose";
 
-import "./types/types";
 import "./utils/string";
 
+// Must be imported after mongodb connection is initialized
 import app from "./app";
 import { generateAndSaveSecret } from "./utils/secret";
 import MongooseConnect from "./utils/mongoose-connect";
@@ -26,8 +26,8 @@ const mongoDBConnectionDetails = MongooseConnect.getConnectionDetailsFromEnv();
 const mongooseConnectionURI = MongooseConnect.buildConnectionURI(mongoDBConnectionDetails);
 MongooseConnect.initialize();
 
-// Loa secret key for JWT
-if (process.env.JWT_SECRET === undefined) {
+// Load secret key for JWT
+if (process.env.SESSION_SECRET === undefined) {
     generateAndSaveSecret(resolve("./", ".env"));
 }
 

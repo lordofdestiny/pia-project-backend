@@ -10,7 +10,7 @@ export function notFoundErrorHandler(request: Request, response: Response, next:
         method: request.method,
         route: request.url,
     };
-    if (request.method in ["POST", "PUT", "PATCH"]) {
+    if (["POST", "PUT", "PATCH"].includes(request.method)) {
         Object.assign(obj, { body: request.body });
     }
     response.status(404).json(obj);
@@ -39,7 +39,6 @@ export function logErrorHandler(absoluteFolderPath: string) {
     } catch (error) {
         try {
             mkdirSync(absoluteFolderPath);
-            console.log(`Created folder at ${absoluteFolderPath}`);
         } catch (error) {
             throw new Error("Folder at given path does not exist and could not be created");
         }
@@ -66,7 +65,6 @@ export function logErrorHandler(absoluteFolderPath: string) {
         const time = new Date();
         const timestamp = Math.ceil(time.getTime() / 1000);
         const filename = `${timestamp} ${method} ${route.replaceAll("/", ".")}.log`;
-        console.log(filename);
         const filepath = resolve(absoluteFolderPath, filename);
 
         await writeFile(

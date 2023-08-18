@@ -1,16 +1,16 @@
-import { Schema, Model, model, Document, CallbackError, Types } from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-export enum EUserRole {
-    User = "User",
-    Patient = "Patient",
-    Doctor = "Doctor",
-    Manager = "Manager",
-}
+import { Schema, Model, model, Document, CallbackError, Types, HydratedDocument } from "mongoose";
 
+export enum EUserRole {
+    USER = "user",
+    PATIENT = "patient",
+    DOCTOR = "doctor",
+    MANAGER = "manager",
+}
 export interface IUser {
-    id?: String;
+    id?: string;
     _id?: Types.ObjectId;
     email: string;
     username: string;
@@ -28,7 +28,11 @@ export interface IUserMethods {
     comparePassword: (password: string) => Promise<boolean>;
 }
 
-type UserModel = Model<IUser, {}, IUserMethods>;
+export interface IUserVirtuals {
+    get id(): string;
+}
+
+type UserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
 
 const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     {
@@ -97,27 +101,24 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
             trim: true,
             enum: Object.freeze(Object.values(EUserRole)),
             required: [true, "User role is required"],
-            default: EUserRole.User,
+            default: EUserRole.USER,
         },
     },
     {
         discriminatorKey: "type",
-        methods: {
-            async comparePassword(password: string) {
-                const digest = await this.digestPassword(password, this.salt);
-                const hash = await bcrypt.hash(digest, this.salt);
-                return bcrypt.compare(password, hash);
-            },
-        },
     }
 );
 
-export async function digestAndBcryptPassword(
-    password: string,
-    salt: string,
-    algorithm = "sha256"
-) {
-    const digest = crypto.createHmac(algorithm, salt).update(password).digest("hex");
+userSchema.virtual("id").get(function () {
+    return this._id.toString();
+});
+
+function digestPassword(password: string, salt: string, algorithm = "sha256"): string {
+    return crypto.createHmac(algorithm, salt).update(password).digest("hex");
+}
+
+async function digestAndBcryptPassword(password: string, salt: string, algorithm = "sha256") {
+    const digest = digestPassword(password, salt, algorithm);
     return bcrypt.hash(digest, salt);
 }
 
@@ -134,13 +135,17 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.set("toObject", {
-    transform: (_: unknown, result: IUser) => {
-        result.id = result._id!.toString();
+    transform: (doc: HydratedDocument<IUser, IUserMethods>, result: IUser) => {
+        result.id = doc.id;
         delete result._id;
         delete result.password;
         delete result.salt;
         return result;
     },
+});
+
+userSchema.method("comparePassword", async function (password: string) {
+    return bcrypt.compare(await digestPassword(password, this.salt), this.password!);
 });
 
 export const UserModel = model<IUser, UserModel>("User", userSchema, "users");

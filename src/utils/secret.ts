@@ -14,7 +14,7 @@ async function generateSecret(length) {
 
 export async function generateAndSaveSecret(
     envFilePath: string,
-    varName = "JWT_SECRET",
+    varName = "SESSION_SECRET",
     length = 32
 ) {
     const secret = await generateSecret(length);
