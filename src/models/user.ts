@@ -23,7 +23,7 @@ export interface SessionUser {
     type: EUserRole;
 }
 
-export const session_fields: (keyof SessionUser)[] = [
+export const session_fields: (keyof SessionUser | string)[] = [
     "id",
     "username",
     "email",
@@ -33,6 +33,9 @@ export const session_fields: (keyof SessionUser)[] = [
     "address",
     "phone",
     "profile_picture",
+    "licence_number",
+    "specialization",
+    "branch",
 ];
 
 declare global {
@@ -155,11 +158,12 @@ userSchema.pre("save", async function (next) {
 
 userSchema.set("toObject", {
     transform: (
-        doc: HydratedDocument<IUser, IUserMethods>,
-        result: IUser & { _id?: Types.ObjectId }
+        _doc: HydratedDocument<IUser, IUserMethods>,
+        result: IUser & { _id?: Types.ObjectId; __v?: number }
     ) => {
         result.id = result._id?.toString()!;
         delete result._id;
+        delete result.__v;
         result.profile_picture = relativizePicturePath(result.profile_picture);
         delete result.password;
         delete result.salt;

@@ -41,7 +41,7 @@ app.use(
 );
 
 // Routers
-app.use("/user", UserRouter);
+app.use("/", UserRouter);
 app.use("/auth", AuthRouter);
 
 // Error handlers

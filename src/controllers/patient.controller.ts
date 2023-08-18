@@ -4,15 +4,7 @@ import { MongooseError, Types } from "mongoose";
 import { Request, Response, NextFunction } from "express";
 import { UserModel, IUser } from "../models/user";
 import { PatientModel, IPatient } from "../models/patient";
-import { relativizePicturePath } from "../utils/util";
-
-const default_profile_picture = path.resolve(
-    process.cwd(),
-    "public",
-    "resources",
-    "img",
-    "default.png"
-);
+import { default_profile_picture, relativizePicturePath } from "../utils/util";
 
 export default class PatientController {
     public static async register(
@@ -20,6 +12,9 @@ export default class PatientController {
         response: Response,
         next: NextFunction
     ) {
+        if (request.isAuthenticated()) {
+            return response.status(409).json({ message: "already logged in" });
+        }
         if (request.file === undefined && (request.file_not_image ?? false)) {
             return response.status(400).json({ message: "file that was send was not an image" });
         }
@@ -69,7 +64,15 @@ export default class PatientController {
             }
             Object.assign(user, data);
             await user?.save({ validateModifiedOnly: true });
-            response.status(200).json(user.toObject());
+            request.session.reload((err) => {
+                if (err) next(err);
+                return response.status(200).json(
+                    Object.assign(user.toObject(), {
+                        id: undefined,
+                        type: undefined,
+                    })
+                );
+            });
         } catch (error) {
             next(error);
         }

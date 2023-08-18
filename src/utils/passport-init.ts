@@ -10,7 +10,7 @@ passport.use("local_manager", Authenticator.adminStrategy);
 
 passport.serializeUser((user: Express.User, done) => {
     process.nextTick(() => {
-        done(null, Object.pick(user, ...session_fields));
+        done(null, Object.pickInclusive(user, ...session_fields));
     });
 });
 

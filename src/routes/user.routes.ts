@@ -9,8 +9,8 @@ import ManagerRouter from "./manager.routes";
 const UserRouter = Router();
 
 // Import routers
-UserRouter.use("/patient", Authenticator.authenticate([EUserRole.PATIENT]), PatientRouter);
-UserRouter.use("/doctor", Authenticator.authenticate([EUserRole.DOCTOR]), DoctorRouter);
-UserRouter.use("/manager", Authenticator.authenticate([EUserRole.MANAGER]), ManagerRouter);
+UserRouter.use("/patient", PatientRouter);
+UserRouter.use("/doctor", DoctorRouter);
+UserRouter.use("/manager", ManagerRouter);
 
 export default UserRouter;
