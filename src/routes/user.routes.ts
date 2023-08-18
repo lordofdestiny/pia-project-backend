@@ -6,11 +6,13 @@ import passport from "passport";
 import { Authenticator } from "../utils/authenticate";
 import { EUserRole } from "../models/user";
 import AuthRouter from "./auth.routes";
+import ManagerRouter from "./manager.routes";
 
 const userRouter = Router();
 
 // Import routers
-userRouter.use("/patient", PatientRouter);
-userRouter.use("/doctor", DoctorRouter);
+userRouter.use("/patient", Authenticator.authenticate([EUserRole.PATIENT]), PatientRouter);
+userRouter.use("/doctor", Authenticator.authenticate([EUserRole.DOCTOR]), DoctorRouter);
+userRouter.use("/manager", Authenticator.authenticate([EUserRole.MANAGER]), ManagerRouter);
 
 export default userRouter;

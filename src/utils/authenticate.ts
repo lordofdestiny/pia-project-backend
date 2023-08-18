@@ -1,38 +1,50 @@
-import mongoose from "mongoose";
-import { EUserRole } from "../models/user";
+import mongoose, { LeanDocument, Model } from "mongoose";
+import { EUserRole, IUser, UserModel } from "../models/user";
 import { Strategy } from "passport-local";
 import passport from "passport";
 import { NextFunction, Request, Response } from "express";
+import { ManagerModel } from "../models/manager";
 
 export class Authenticator {
-    private static readonly typeStrategies = new Map(
-        Object.values(EUserRole).map((key) => [key, new Authenticator(key)])
+    public static readonly nonAdminStrategy = new Strategy(
+        { usernameField: "email" },
+        this.verifyNonAdmin.bind(this)
     );
-    constructor(private user_type: EUserRole) {}
+    public static readonly adminStrategy = new Strategy(
+        { usernameField: "email" },
+        this.verifyAdmin.bind(this)
+    );
 
-    private readonly strategy = new Strategy({ usernameField: "email" }, this.verify.bind(this));
+    private static async handleVerify(password, user, done) {
+        if (user == null) {
+            return done(null, false, {
+                message: "user not found",
+            });
+        }
+        if (!(await user.comparePassword(password))) {
+            return done(null, false, {
+                message: "incorrect password",
+            });
+        }
+        return done(null, user);
+    }
 
-    private async verify(email, password, done) {
+    private static async verifyNonAdmin(email, password, done) {
         try {
-            const user = await mongoose.model(this.user_type.toTitleCase()).findOne({ email });
-            if (user == null) {
-                return done(null, false, {
-                    message: "user not found",
-                });
-            }
-            if (await user.comparePassword(password)) {
-                return done(null, user);
-            } else {
-                return done(null, false, {
-                    message: "incorrect password",
-                });
-            }
+            const user = await UserModel.findOne({ email, $nor: [{ type: "manager" }] });
+            this.handleVerify(password, user, done);
         } catch (err) {
             return done(err);
         }
     }
-    public static getStrategy(user_type: EUserRole): [string, Strategy] {
-        return [`local_${user_type}`, Authenticator.typeStrategies.get(user_type)!.strategy];
+
+    private static async verifyAdmin(email, password, done) {
+        try {
+            const user = await ManagerModel.findOne({ email, $nor: [{ type: "manager" }] });
+            this.handleVerify(password, user, done);
+        } catch (err) {
+            return done(err);
+        }
     }
 
     static authenticate(user_types: EUserRole[]) {

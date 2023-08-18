@@ -9,32 +9,50 @@ export enum EUserRole {
     DOCTOR = "doctor",
     MANAGER = "manager",
 }
-export interface IUser {
-    id?: string;
-    _id?: Types.ObjectId;
-    email: string;
+
+export interface SessionUser {
+    id: string;
     username: string;
+    email: string;
     first_name: string;
     last_name: string;
     phone: string;
     address: string;
+    type: EUserRole;
+}
+
+export const session_fields: (keyof SessionUser)[] = [
+    "id",
+    "username",
+    "email",
+    "first_name",
+    "last_name",
+    "type",
+    "address",
+    "phone",
+];
+
+declare global {
+    namespace Express {
+        interface User extends SessionUser {}
+    }
+}
+
+export interface IUser extends SessionUser {
     profile_picture: string;
     salt?: string;
     password?: string;
-    type: EUserRole;
 }
 
 export interface IUserMethods {
     comparePassword: (password: string) => Promise<boolean>;
 }
 
-export interface IUserVirtuals {
-    get id(): string;
-}
+export interface IUserVirtuals {}
 
-type UserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
+type TUserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
 
-const userSchema = new Schema<IUser, UserModel, IUserMethods>(
+const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
     {
         username: {
             type: String,
@@ -109,10 +127,6 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     }
 );
 
-userSchema.virtual("id").get(function () {
-    return this._id.toString();
-});
-
 function digestPassword(password: string, salt: string, algorithm = "sha256"): string {
     return crypto.createHmac(algorithm, salt).update(password).digest("hex");
 }
@@ -136,8 +150,6 @@ userSchema.pre("save", async function (next) {
 
 userSchema.set("toObject", {
     transform: (doc: HydratedDocument<IUser, IUserMethods>, result: IUser) => {
-        result.id = doc.id;
-        delete result._id;
         delete result.password;
         delete result.salt;
         return result;
@@ -148,4 +160,4 @@ userSchema.method("comparePassword", async function (password: string) {
     return bcrypt.compare(await digestPassword(password, this.salt), this.password!);
 });
 
-export const UserModel = model<IUser, UserModel>("User", userSchema, "users");
+export const UserModel = model<IUser, TUserModel>("User", userSchema, "users");

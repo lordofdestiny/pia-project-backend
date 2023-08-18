@@ -14,7 +14,7 @@ import {
     serverErrorHandler,
 } from "./middleware/error-handler";
 
-import { EUserRole, IUser } from "./models/user";
+import { EUserRole, IUser, SessionUser, session_fields } from "./models/user";
 import { Authenticator } from "./utils/authenticate";
 import MongooseConnect from "./utils/mongoose-connect";
 import UserRouter from "./routes/user.routes";
@@ -38,26 +38,12 @@ app.use(
 );
 
 //Initialize passport
-for (const type of Object.values(EUserRole)) {
-    passport.use(...Authenticator.getStrategy(type));
-}
-declare global {
-    namespace Express {
-        interface User {
-            id: string;
-            username: string;
-            email: string;
-            first_name: string;
-            last_name: string;
-            type: EUserRole;
-        }
-    }
-}
-
+passport.use("local_default", Authenticator.nonAdminStrategy);
+passport.use("local_manager", Authenticator.adminStrategy);
 passport.serializeUser((user: Express.User, done) => {
     process.nextTick(() => {
-        const { id, username, email, first_name, last_name, type } = user as IUser;
-        done(null, { id, username, email, first_name, last_name, type });
+        const serialized_user: SessionUser = Object.pick(user, ...session_fields);
+        done(null, serialized_user);
     });
 });
 passport.deserializeUser((user: Express.User, done) => {
@@ -84,7 +70,7 @@ app.get(
     "/secret",
     Authenticator.authenticate([EUserRole.USER]),
     (request: Request, response: Response) => {
-        const { first_name, last_name } = request.user as IUser;
+        const { first_name, last_name } = request.user!;
         const fullName = `${first_name} ${last_name}`.toTitleCase();
         response.json({ message: `success! Hello, ${fullName}!` });
     }

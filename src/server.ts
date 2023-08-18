@@ -3,6 +3,7 @@ import http from "http";
 import { resolve } from "path";
 import mongoose from "mongoose";
 
+import "./utils/object";
 import "./utils/string";
 
 // Must be imported after mongodb connection is initialized

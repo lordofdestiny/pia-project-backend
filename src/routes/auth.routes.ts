@@ -2,13 +2,23 @@ import express, { Router } from "express";
 import AuthController from "../controllers/auth.controller";
 import { EUserRole } from "../models/user";
 import { Authenticator } from "../utils/authenticate";
+import PatientController from "../controllers/patient.controller";
+import DoctorController from "../controllers/doctor.controller";
 
 const AuthRouter = Router();
 
 // Common routes
-AuthRouter.post("/register", AuthController.register);
-AuthRouter.post("/login", AuthController.login);
-AuthRouter.post("/logout", AuthController.logout);
+AuthRouter.post("/register/patient", PatientController.register);
+AuthRouter.post(
+    "/register/doctor",
+    Authenticator.authenticate([EUserRole.MANAGER]),
+    DoctorController.register
+);
+
+AuthRouter.post("/login", AuthController.login_default);
+AuthRouter.post("/login/manager", AuthController.login_manager);
+
+AuthRouter.post("/logout", Authenticator.authenticate([EUserRole.USER]), AuthController.logout);
 AuthRouter.post(
     "/change-password",
     Authenticator.authenticate([EUserRole.USER]),

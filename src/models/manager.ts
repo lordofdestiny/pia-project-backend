@@ -5,13 +5,13 @@ export interface IManager extends IUser {}
 
 interface IManagerMethods extends IUserMethods {}
 
-type ManagerModel = Model<IManager, {}, IManagerMethods>;
+type TManagerModel = Model<IManager, {}, IManagerMethods>;
 
-const managerSchema = new Schema<IManager, ManagerModel, IManagerMethods>(
+const managerSchema = new Schema<IManager, TManagerModel, IManagerMethods>(
     {},
     {
         discriminatorKey: "type",
     }
 );
 
-export default UserModel.discriminator("Manager", managerSchema, EUserRole.MANAGER);
+export const ManagerModel = UserModel.discriminator("Manager", managerSchema, EUserRole.MANAGER);

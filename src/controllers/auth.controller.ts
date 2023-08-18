@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-import Patient, { IPatient } from "../models/patient";
+import { PatientModel, IPatient } from "../models/patient";
 import { UserModel, IUser, IUserMethods } from "../models/user";
 import { HydratedDocument, Types } from "mongoose";
 import passport from "passport";
@@ -11,34 +11,43 @@ interface IChangePasswordBody {
 }
 
 export default class AuthController {
-    public static async register(
-        request: Request<{}, {}, IPatient>,
-        response: Response,
-        next: NextFunction
-    ) {
-        const { body: data } = request;
-        try {
-            const user = await Patient.create(data);
-            response.status(201).json(user.toObject());
-        } catch (err) {
-            next(err);
-        }
-    }
-
-    public static async login(request: Request, response: Response, next: NextFunction) {
-        passport.authenticate("local_user", (err, user, info) => {
+    public static login_default = (request: Request, response: Response, next: NextFunction) => {
+        passport.authenticate("local_default", (err, user, info) => {
             if (err) return next(err);
             if (!user) {
                 return response.status(401).json(info);
             }
-            request.logIn(user, (err) => {
-                if (err) return next(err);
-                response.status(200).json({ message: "logged in" });
-            });
+            if (request.isAuthenticated?.()) {
+                return response.status(409).json({ message: "already logged in" });
+            } else {
+                request.logIn(user, (err) => {
+                    if (err) return next(err);
+                    response.status(200).json({ message: "logged in" });
+                });
+            }
+        })(request, response, next);
+    };
+
+    public static async login_manager(request: Request, response: Response, next: NextFunction) {
+        passport.authenticate("local_manager", (err, user, info) => {
+            if (err) return next(err);
+            if (!user) {
+                return response.status(401).json(info);
+            }
+            if (user.isAuthenticated?.()) {
+                return response.status(409).json({ message: "already logged in" });
+            } else {
+                request.logIn(user, (err) => {
+                    if (err) return next(err);
+                    response.status(200).json({ message: "logged in" });
+                });
+            }
         })(request, response, next);
     }
 
     public static async logout(request: Request, response: Response, next: NextFunction) {
+        if (!request.isAuthenticated())
+            return response.status(401).json({ message: "unauthorized" });
         request.logout(
             {
                 keepSessionInfo: false,
@@ -59,8 +68,11 @@ export default class AuthController {
         response: Response,
         next: NextFunction
     ) {
+        if (!request.isAuthenticated()) {
+            return response.status(401).json({ message: "unauthorized" });
+        }
         const {
-            user: { id } = {},
+            user: { id },
             body: { old_password, new_password },
         } = request;
 

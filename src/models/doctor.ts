@@ -9,9 +9,9 @@ export interface IDoctor extends IUser {
 
 interface IDoctorMethods extends IUserMethods {}
 
-type DoctorModel = Model<IDoctor, {}, IDoctorMethods>;
+type TDoctorModel = Model<IDoctor, {}, IDoctorMethods>;
 
-const doctorSchema = new Schema<IDoctor, DoctorModel, IDoctorMethods>(
+const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
     {
         licence_number: {
             type: String,
@@ -31,4 +31,4 @@ const doctorSchema = new Schema<IDoctor, DoctorModel, IDoctorMethods>(
     }
 );
 
-export default UserModel.discriminator("Doctor", doctorSchema, EUserRole.DOCTOR);
+export const DoctorModel = UserModel.discriminator("Doctor", doctorSchema, EUserRole.DOCTOR);
