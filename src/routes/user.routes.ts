@@ -1,10 +1,10 @@
 import express, { Router } from "express";
 import path from "path";
-import PatientRouter from "./patient.routes";
-import DoctorRouter from "./doctor.routes";
-import { Authenticator } from "../utils/authenticate";
-import { EUserRole } from "../models/user";
-import ManagerRouter from "./manager.routes";
+import PatientRouter from "@routes/patient.routes";
+import DoctorRouter from "@routes/doctor.routes";
+import ManagerRouter from "@routes/manager.routes";
+import { Authenticator } from "@utils/authenticate";
+import { EUserRole } from "@models/user";
 
 const UserRouter = Router();
 

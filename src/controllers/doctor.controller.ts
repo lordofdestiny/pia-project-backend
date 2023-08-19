@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { DoctorModel, IDoctor } from "../models/doctor";
-import { default_profile_picture } from "../utils/util";
+import { DoctorModel, IDoctor } from "@models/doctor";
+import { default_profile_picture } from "@utils/util";
 
 export default class DoctorController {
     public static async register(

@@ -1,10 +1,10 @@
 import express, { Router } from "express";
-import AuthController from "../controllers/auth.controller";
-import { EUserRole, IUser } from "../models/user";
-import { Authenticator } from "../utils/authenticate";
-import PatientController from "../controllers/patient.controller";
-import DoctorController from "../controllers/doctor.controller";
-import { upload } from "../utils/upload";
+import AuthController from "@controllers/auth.controller";
+import { EUserRole, IUser } from "@models/user";
+import { Authenticator } from "@utils/authenticate";
+import PatientController from "@controllers/patient.controller";
+import DoctorController from "@controllers/doctor.controller";
+import { upload } from "@utils/upload";
 
 const AuthRouter = Router();
 

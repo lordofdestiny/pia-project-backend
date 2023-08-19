@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-import { MongooseError, Error } from "mongoose";
-import { writeFile } from "fs/promises";
-import { existsSync, lstatSync, mkdirSync } from "fs";
 import { resolve } from "path";
+import { writeFile } from "fs/promises";
+import { lstatSync, mkdirSync } from "fs";
+import { MongooseError, Error } from "mongoose";
+import { NextFunction, Request, Response } from "express";
 
 export function notFoundErrorHandler(request: Request, response: Response, next: NextFunction) {
     const obj = {
@@ -83,7 +83,7 @@ export async function serverErrorHandler(
     _error: Error,
     _request: Request,
     response: Response,
-    next: NextFunction
+    _next: NextFunction
 ) {
     response.sendStatus(500);
 }

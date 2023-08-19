@@ -1,6 +1,6 @@
 import MongoStore from "connect-mongo";
 import session from "express-session";
-import MongooseConnect from "../utils/mongoose-connect";
+import MongooseConnect from "@utils/mongoose-connect";
 
 export const Sessions = session({
     secret: process.env.SESSION_SECRET!,

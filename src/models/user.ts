@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-import { relativizePicturePath } from "../utils/util";
+import { relativizePicturePath } from "@utils/util";
 import { Schema, Model, model, Document, CallbackError, Types, HydratedDocument } from "mongoose";
 
 export enum EUserRole {

@@ -1,5 +1,5 @@
 import { Schema, Model, model } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "./user";
+import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user";
 
 export interface IExamination extends IUser {
     specializations_id: IExamination;

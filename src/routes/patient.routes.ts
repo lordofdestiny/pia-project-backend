@@ -1,9 +1,9 @@
 import multer from "multer";
 import { Router } from "express";
-import PatientController from "../controllers/patient.controller";
-import { Authenticator } from "../utils/authenticate";
-import { EUserRole } from "../models/user";
-import { upload } from "../utils/upload";
+import PatientController from "@controllers/patient.controller";
+import { Authenticator } from "@utils/authenticate";
+import { EUserRole } from "@models/user";
+import { upload } from "@utils/upload";
 
 const PatientRouter = Router();
 

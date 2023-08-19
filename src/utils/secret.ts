@@ -1,7 +1,7 @@
-import { readFile, writeFile } from "fs/promises";
-import { parse, stringify } from "envfile";
-import { randomFill as randomFill0 } from "crypto";
 import { promisify } from "util";
+import { parse, stringify } from "envfile";
+import { readFile, writeFile } from "fs/promises";
+import { randomFill as randomFill0 } from "crypto";
 
 async function randomFill(buffer) {
     return <Buffer>await promisify(randomFill0)(buffer);

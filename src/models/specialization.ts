@@ -1,6 +1,6 @@
 import { Schema, Model, model } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "./user";
-import { ExaminationModel, IExamination } from "./examination";
+import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user";
+import { ExaminationModel, IExamination } from "@models/examination";
 
 export interface ISpecialization extends IUser {
     name: string;

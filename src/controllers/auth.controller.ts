@@ -1,9 +1,9 @@
+import passport from "passport";
+import { HydratedDocument, Types } from "mongoose";
 import { Request, Response, NextFunction } from "express";
 
-import { PatientModel, IPatient } from "../models/patient";
-import { UserModel, IUser, IUserMethods } from "../models/user";
-import { HydratedDocument, Types } from "mongoose";
-import passport from "passport";
+import { PatientModel, IPatient } from "@models/patient";
+import { UserModel, IUser, IUserMethods } from "@models/user";
 
 interface IChangePasswordBody {
     old_password?: string;

@@ -2,9 +2,9 @@ import path from "path";
 import { unlink } from "fs/promises";
 import { MongooseError, Types } from "mongoose";
 import { Request, Response, NextFunction } from "express";
-import { UserModel, IUser } from "../models/user";
-import { PatientModel, IPatient } from "../models/patient";
-import { default_profile_picture, relativizePicturePath } from "../utils/util";
+import { UserModel, IUser } from "@models/user";
+import { PatientModel, IPatient } from "@models/patient";
+import { default_profile_picture, relativizePicturePath } from "@utils/util";
 
 export default class PatientController {
     public static async register(

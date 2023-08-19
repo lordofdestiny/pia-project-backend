@@ -3,13 +3,13 @@ import http from "http";
 import { resolve } from "path";
 import mongoose from "mongoose";
 
-import "./utils/object";
-import "./utils/string";
+import "@utils/object";
+import "@utils/string";
 
 // Must be imported after mongodb connection is initialized
 import app from "./app";
-import { generateAndSaveSecret } from "./utils/secret";
-import MongooseConnect from "./utils/mongoose-connect";
+import { generateAndSaveSecret } from "@utils/secret";
+import MongooseConnect from "@utils/mongoose-connect";
 
 const port = process.env.PORT ?? 3000;
 

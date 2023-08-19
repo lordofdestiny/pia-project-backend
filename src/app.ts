@@ -11,15 +11,14 @@ import {
     logErrorHandler,
     serverErrorHandler,
 } from "./middleware/error-handler";
-import { Sessions } from "./middleware/session";
+import { Sessions } from "@middleware/session";
 
-import UserRouter from "./routes/user.routes";
-import AuthRouter from "./routes/auth.routes";
+import UserRouter from "@routes/user.routes";
+import AuthRouter from "@routes/auth.routes";
 /* Import the passport-init.ts file to initialize passport
  * with the correct strategies and serialization/deserialization functions
  */
-import "./utils/passport-init";
-import exp from "constants";
+import "@utils/passport-init";
 
 const app: Express = express();
 

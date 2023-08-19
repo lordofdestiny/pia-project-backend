@@ -1,7 +1,7 @@
-import { EUserRole, IUser, UserModel } from "../models/user";
 import { Strategy } from "passport-local";
 import { NextFunction, Request, Response } from "express";
-import { ManagerModel } from "../models/manager";
+import { ManagerModel } from "@models/manager";
+import { EUserRole, IUser, UserModel } from "@models/user";
 export class Authenticator {
     public static readonly nonAdminStrategy = new Strategy(
         { usernameField: "email" },

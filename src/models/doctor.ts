@@ -1,5 +1,5 @@
 import { Schema, Model } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "./user";
+import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user";
 
 export interface IDoctor extends IUser {
     licence_number: string;
