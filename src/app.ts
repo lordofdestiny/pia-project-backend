@@ -1,4 +1,5 @@
 import path from "path";
+import cors from "cors";
 import morgan from "morgan";
 import passport from "passport";
 import express, { Express, Request, Response } from "express";
@@ -27,6 +28,9 @@ app.use(Sessions, passport.initialize(), passport.session());
 
 // Middlewares
 app.use(morgan("dev"));
+
+// CORS
+app.use(cors({ origin: "*", credentials: true }));
 
 // Request body parsers
 app.use(express.json(), express.urlencoded({ extended: false }));
