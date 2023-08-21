@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
 import { relativizePicturePath } from "@utils/util";
 import { Schema, Model, model, Document, CallbackError, Types, HydratedDocument } from "mongoose";
@@ -20,6 +21,7 @@ export interface SessionUser {
     phone: string;
     address: string;
     profile_picture: string;
+    relative_profile_picture: string;
     type: EUserRole;
 }
 
@@ -132,6 +134,9 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
     },
     {
         discriminatorKey: "type",
+        toObject: {
+            getters: true,
+        },
     }
 );
 
@@ -143,6 +148,10 @@ async function digestAndBcryptPassword(password: string, salt: string, algorithm
     const digest = digestPassword(password, salt, algorithm);
     return bcrypt.hash(digest, salt);
 }
+
+userSchema.virtual("relative_profile_picture").get(function (this: IUser) {
+    return relativizePicturePath(this.profile_picture);
+});
 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
@@ -157,14 +166,10 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.set("toObject", {
-    transform: (
-        _doc: HydratedDocument<IUser, IUserMethods>,
-        result: IUser & { _id?: Types.ObjectId; __v?: number }
-    ) => {
+    transform: (_doc: HydratedDocument<IUser, IUserMethods>, result) => {
         result.id = result._id?.toString()!;
         delete result._id;
         delete result.__v;
-        result.profile_picture = relativizePicturePath(result.profile_picture);
         delete result.password;
         delete result.salt;
         return result;
@@ -174,5 +179,7 @@ userSchema.set("toObject", {
 userSchema.method("comparePassword", async function (password: string) {
     return bcrypt.compare(await digestPassword(password, this.salt), this.password!);
 });
+
+userSchema.plugin(mongooseLeanVirtuals);
 
 export const UserModel = model<IUser, TUserModel>("User", userSchema, "users");

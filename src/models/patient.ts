@@ -11,6 +11,9 @@ const parientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
     {},
     {
         discriminatorKey: "type",
+        toObject: {
+            virtuals: true,
+        },
     }
 );
 

@@ -1,5 +1,6 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user";
+import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
 export interface IDoctor extends IUser {
     licence_number: string;
@@ -28,7 +29,12 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
     },
     {
         discriminatorKey: "type",
+        toObject: {
+            virtuals: true,
+        },
     }
 );
+
+// doctorSchema.plugin(mongooseLeanVirtuals);
 
 export const DoctorModel = UserModel.discriminator("Doctor", doctorSchema, EUserRole.DOCTOR);

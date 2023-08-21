@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { DoctorModel, IDoctor } from "@models/doctor";
 import { default_profile_picture } from "@utils/util";
+import { HydratedDocument, ProjectionType } from "mongoose";
 
 export default class DoctorController {
     public static async register(
@@ -21,31 +22,60 @@ export default class DoctorController {
         }
     }
 
+    private static readonly not_authenticated_get_all_filter = {
+        _id: 0,
+        first_name: 1,
+        last_name: 1,
+        specialization: 1,
+        profile_picture: 1,
+        relative_profile_picture: 1,
+        type: 0,
+    };
+
     public static async get_all(
         _request: Request<{}, {}, IDoctor>,
         response: Response,
         next: NextFunction
     ) {
+        const filter = _request.isAuthenticated()
+            ? { ...DoctorController.not_authenticated_get_all_filter, username: 1 }
+            : DoctorController.not_authenticated_get_all_filter;
         try {
-            const data = await DoctorModel.find();
-            return response.status(200).json(data);
+            const data = await DoctorModel.find({}, filter).lean({
+                virtuals: ["relative_profile_picture"],
+            });
+            return response
+                .status(200)
+                .json(data.map((doc) => ({ ...doc, profile_picture: undefined })));
         } catch (err) {
             next(err);
         }
     }
 
     public static async get_by_id(
-        request: Request<{ id: "string" }, {}, IDoctor>,
+        request: Request<{ username: "string" }, {}, IDoctor>,
         response: Response,
         next: NextFunction
     ) {
-        const { id } = request.params;
+        const { username } = request.params;
         try {
-            const data = await DoctorModel.findById(id);
+            const data = await DoctorModel.findOne(
+                { username },
+                {
+                    _id: 0,
+                    __v: 0,
+                    password: 0,
+                    salt: 0,
+                }
+            ).lean({ virtuals: ["relative_profile_picture"] });
             if (data == null) {
                 return response.status(404).json({ message: "doctor not found" });
             }
-            return response.status(200).json(data);
+            return response.status(200).json({
+                ...data,
+                profile_picture: data.relative_profile_picture,
+                relative_profile_picture: undefined,
+            });
         } catch (err) {
             next(err);
         }

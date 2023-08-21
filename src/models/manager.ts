@@ -11,6 +11,9 @@ const managerSchema = new Schema<IManager, TManagerModel, IManagerMethods>(
     {},
     {
         discriminatorKey: "type",
+        toObject: {
+            virtuals: true,
+        },
     }
 );
 
