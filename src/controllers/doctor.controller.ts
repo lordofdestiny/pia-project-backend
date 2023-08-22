@@ -46,7 +46,13 @@ export default class DoctorController {
             });
             return response
                 .status(200)
-                .json(data.map((doc) => ({ ...doc, profile_picture: undefined })));
+                .json(
+                    data.map((doc) => ({
+                        ...doc,
+                        profile_picture: doc.relative_profile_picture,
+                        relative_profile_picture: undefined,
+                    }))
+                );
         } catch (err) {
             next(err);
         }
@@ -71,9 +77,10 @@ export default class DoctorController {
             if (data == null) {
                 return response.status(404).json({ message: "doctor not found" });
             }
+            const profile_picture = data.relative_profile_picture;
             return response.status(200).json({
                 ...data,
-                profile_picture: data.relative_profile_picture,
+                profile_picture,
                 relative_profile_picture: undefined,
             });
         } catch (err) {
