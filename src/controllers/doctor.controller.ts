@@ -23,7 +23,7 @@ export default class DoctorController {
     }
 
     private static readonly not_authenticated_get_all_filter = {
-        _id: 0,
+        _id: 1,
         first_name: 1,
         last_name: 1,
         specialization: 1,
@@ -42,17 +42,16 @@ export default class DoctorController {
             : DoctorController.not_authenticated_get_all_filter;
         try {
             const data = await DoctorModel.find({}, filter).lean({
-                virtuals: ["relative_profile_picture"],
+                virtuals: true,
             });
-            return response
-                .status(200)
-                .json(
-                    data.map((doc) => ({
-                        ...doc,
-                        profile_picture: doc.relative_profile_picture,
-                        relative_profile_picture: undefined,
-                    }))
-                );
+            return response.status(200).json(
+                data.map((doc) => ({
+                    ...doc,
+                    _id: undefined,
+                    profile_picture: doc.relative_profile_picture,
+                    relative_profile_picture: undefined,
+                }))
+            );
         } catch (err) {
             next(err);
         }
@@ -73,13 +72,14 @@ export default class DoctorController {
                     password: 0,
                     salt: 0,
                 }
-            ).lean({ virtuals: ["relative_profile_picture"] });
+            ).lean({ virtuals: true });
             if (data == null) {
                 return response.status(404).json({ message: "doctor not found" });
             }
             const profile_picture = data.relative_profile_picture;
             return response.status(200).json({
                 ...data,
+                _id: undefined,
                 profile_picture,
                 relative_profile_picture: undefined,
             });

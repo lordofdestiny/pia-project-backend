@@ -30,7 +30,7 @@ app.use(Sessions, passport.initialize(), passport.session());
 app.use(morgan("dev"));
 
 // CORS
-app.use(cors({ origin: "*", credentials: true }));
+app.use(cors({ origin: "http://localhost:4200", credentials: true }));
 
 // Request body parsers
 app.use(express.json(), express.urlencoded({ extended: false }));

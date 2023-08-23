@@ -15,14 +15,14 @@ export default class AuthController {
         passport.authenticate("local_default", (err, user, info) => {
             if (err) return next(err);
             if (!user) {
-                return response.status(401).send(info.message);
+                return response.status(401).jsonp(info);
             }
             if (request.isAuthenticated?.()) {
-                return response.status(409).json("already logged in");
+                return response.status(409).jsonp({ message: "already logged in" });
             } else {
                 request.logIn(user, (err) => {
                     if (err) return next(err);
-                    response.status(200).json({ message: "logged in" });
+                    response.status(200).jsonp({ message: "logged in", role: user.role });
                 });
             }
         })(request, response, next);
@@ -39,7 +39,7 @@ export default class AuthController {
             } else {
                 request.logIn(user, (err) => {
                     if (err) return next(err);
-                    response.status(200).json({ message: "logged in" });
+                    response.status(200).json({ message: "logged in", role: user.role });
                 });
             }
         })(request, response, next);
