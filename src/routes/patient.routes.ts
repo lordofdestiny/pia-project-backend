@@ -7,6 +7,8 @@ import { upload } from "@utils/upload";
 
 const PatientRouter = Router();
 
+// TODO: MAYBE UPDATE Privileges
+
 PatientRouter.get(
     "/profile",
     Authenticator.authenticate([EUserRole.PATIENT]),

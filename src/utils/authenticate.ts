@@ -44,15 +44,17 @@ export class Authenticator {
         }
     }
 
-    static authenticate(user_types: EUserRole[]) {
+    static authenticate(user_types: Exclude<EUserRole, EUserRole.USER>[]) {
+        if (!Boolean(process.env.SECURITY)) {
+            return (_request: Request, _response: Response, next: NextFunction) => {
+                return next();
+            };
+        }
         return (request: Request, response: Response, next: NextFunction) => {
             if (!request.isAuthenticated()) {
                 return response.sendStatus(401);
             }
-            if (
-                !user_types.includes("user" as EUserRole) &&
-                !user_types.includes(request.user.type)
-            ) {
+            if (!user_types.includes(request.user.type)) {
                 return response.sendStatus(403);
             }
             return next();

@@ -20,10 +20,14 @@ AuthRouter.post(
 AuthRouter.post("/login", AuthController.login_default);
 AuthRouter.post("/login/manager", AuthController.login_manager);
 
-AuthRouter.post("/logout", Authenticator.authenticate([EUserRole.USER]), AuthController.logout);
+AuthRouter.post(
+    "/logout",
+    Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
+    AuthController.logout
+);
 AuthRouter.post(
     "/change-password",
-    Authenticator.authenticate([EUserRole.USER]),
+    Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     AuthController.changePassword
 );
 
