@@ -24,6 +24,7 @@ export default class DoctorController {
 
     private static readonly not_authenticated_get_all_filter = {
         _id: 1,
+        username: 1,
         first_name: 1,
         last_name: 1,
         specialization: 1,
@@ -37,11 +38,11 @@ export default class DoctorController {
         response: Response,
         next: NextFunction
     ) {
-        const filter = _request.isAuthenticated()
-            ? { ...DoctorController.not_authenticated_get_all_filter, username: 1 }
-            : DoctorController.not_authenticated_get_all_filter;
         try {
-            const data = await DoctorModel.find({}, filter).lean({
+            const data = await DoctorModel.find(
+                {},
+                DoctorController.not_authenticated_get_all_filter
+            ).lean({
                 virtuals: true,
             });
             return response.status(200).json(
@@ -58,16 +59,15 @@ export default class DoctorController {
     }
 
     public static async get_by_id(
-        request: Request<{ username: "string" }, {}, IDoctor>,
+        request: Request<{ id: "string" }, {}, IDoctor>,
         response: Response,
         next: NextFunction
     ) {
-        const { username } = request.params;
+        const { id } = request.params;
         try {
             const data = await DoctorModel.findOne(
-                { username },
+                { id },
                 {
-                    _id: 0,
                     __v: 0,
                     password: 0,
                     salt: 0,

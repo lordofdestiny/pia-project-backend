@@ -11,42 +11,42 @@ interface IChangePasswordBody {
 }
 
 export default class AuthController {
-    public static login_default = (request: Request, response: Response, next: NextFunction) => {
-        passport.authenticate("local_default", (err, user, info) => {
+    private static handle_login(
+        strategy: "local_default" | "local_manager",
+        request: Request,
+        response: Response,
+        next: NextFunction
+    ) {
+        return passport.authenticate(strategy, (err, user, info) => {
             if (err) return next(err);
             if (!user) {
                 return response.status(401).jsonp(info);
             }
             if (request.isAuthenticated?.()) {
                 return response.status(409).jsonp({ message: "already logged in" });
-            } else {
-                request.logIn(user, (err) => {
-                    if (err) return next(err);
-                    response.status(200).jsonp({ message: "logged in", role: user.role });
-                });
             }
-        })(request, response, next);
-    };
-
-    public static async login_manager(request: Request, response: Response, next: NextFunction) {
-        passport.authenticate("local_manager", (err, user, info) => {
-            if (err) return next(err);
-            if (!user) {
-                return response.status(401).json(info);
-            }
-            if (user.isAuthenticated?.()) {
-                return response.status(409).json({ message: "already logged in" });
-            } else {
-                request.logIn(user, (err) => {
-                    if (err) return next(err);
-                    response.status(200).json({ message: "logged in", role: user.role });
-                });
-            }
+            request.logIn(user, (err) => {
+                if (err) return next(err);
+                const { relative_picture_path: picture_path } = user;
+                response
+                    .status(200)
+                    .jsonp({ message: "logged in", picture_path, relative_picture_path: null });
+            });
         })(request, response, next);
     }
 
+    public static login_default = (request: Request, response: Response, next: NextFunction) => {
+        return this.handle_login("local_default", request, response, next);
+    };
+
+    public static async login_manager(request: Request, response: Response, next: NextFunction) {
+        return this.handle_login("local_manager", request, response, next);
+    }
+
     public static async logout(request: Request, response: Response, next: NextFunction) {
-        if (!request.isAuthenticated()) return response.sendStatus(401);
+        // if (!request.isAuthenticated()) {
+        //     return response.sendStatus(401);
+        // }
         request.logout(
             {
                 keepSessionInfo: false,

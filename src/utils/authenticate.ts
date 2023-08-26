@@ -3,14 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import { ManagerModel } from "@models/manager";
 import { EUserRole, IUser, UserModel } from "@models/user";
 export class Authenticator {
-    public static readonly nonAdminStrategy = new Strategy(
-        { usernameField: "email" },
-        this.verifyNonAdmin.bind(this)
-    );
-    public static readonly adminStrategy = new Strategy(
-        { usernameField: "email" },
-        this.verifyAdmin.bind(this)
-    );
+    public static readonly nonAdminStrategy = new Strategy(this.verifyNonAdmin.bind(this));
+    public static readonly adminStrategy = new Strategy(this.verifyAdmin.bind(this));
 
     private static async handleVerify(password, user, done) {
         if (user == null) {
@@ -26,18 +20,18 @@ export class Authenticator {
         return done(null, user.toObject());
     }
 
-    private static async verifyNonAdmin(email, password, done) {
+    private static async verifyNonAdmin(username, password, done) {
         try {
-            const user = await UserModel.findOne({ email, $nor: [{ type: "manager" }] });
+            const user = await UserModel.findOne({ username, $nor: [{ type: "manager" }] });
             this.handleVerify(password, user, done);
         } catch (err) {
             return done(err);
         }
     }
 
-    private static async verifyAdmin(email, password, done) {
+    private static async verifyAdmin(username, password, done) {
         try {
-            const user = await ManagerModel.findOne({ email });
+            const user = await ManagerModel.findOne({ username });
             this.handleVerify(password, user, done);
         } catch (err) {
             return done(err);
@@ -45,7 +39,7 @@ export class Authenticator {
     }
 
     static authenticate(user_types: Exclude<EUserRole, EUserRole.USER>[]) {
-        if (!Boolean(process.env.SECURITY)) {
+        if (!(process.env.SECURITY === "true")) {
             return (_request: Request, _response: Response, next: NextFunction) => {
                 return next();
             };

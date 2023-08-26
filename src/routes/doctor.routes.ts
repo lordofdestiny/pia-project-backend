@@ -7,7 +7,7 @@ const DoctorRouter = Router();
 
 DoctorRouter.get("/", DoctorController.get_all);
 DoctorRouter.get(
-    "/:username",
+    "/:id",
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     DoctorController.get_by_id
 );
