@@ -22,7 +22,12 @@ export default class PatientController {
         const profile_picture = request.file?.path ?? default_profile_picture;
         try {
             const user = await PatientModel.create({ ...data, profile_picture });
-            response.status(201).json(user.toObject());
+            const userObj = user.toObject();
+            Object.assign(userObj, {
+                profile_picture: userObj.relative_profile_picture,
+                relative_profile_picture: undefined,
+            });
+            response.status(201).json(userObj);
         } catch (err) {
             next(err);
         }

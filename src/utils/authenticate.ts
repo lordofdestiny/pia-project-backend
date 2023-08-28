@@ -12,6 +12,11 @@ export class Authenticator {
                 message: "user not found",
             });
         }
+        if (!user.approved) {
+            return done(null, false, {
+                message: "user not approved",
+            });
+        }
         if (!(await user.comparePassword(password))) {
             return done(null, false, {
                 message: "incorrect password",

@@ -102,4 +102,20 @@ export default class AuthController {
             next(err);
         }
     }
+
+    public static async uniqueCredential(
+        request: Request<{}, {}, { value: string; type: string }>,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { type, value } = request.body;
+        try {
+            const user = await UserModel.findOne({
+                [type]: value,
+            }).lean();
+            response.json({ unique: user == null });
+        } catch {
+            response.json({ unique: false });
+        }
+    }
 }

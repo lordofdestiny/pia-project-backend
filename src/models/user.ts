@@ -23,6 +23,7 @@ export interface SessionUser {
     profile_picture: string;
     relative_profile_picture: string;
     type: Exclude<EUserRole, EUserRole.USER>;
+    approved: boolean;
 }
 
 export const session_fields: (keyof SessionUser | string)[] = [
@@ -129,6 +130,11 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
             trim: true,
             enum: Object.freeze(Object.values(EUserRole)),
             required: [true, "User role is required"],
+        },
+        approved: {
+            type: Boolean,
+            required: false,
+            default: false,
         },
     },
     {

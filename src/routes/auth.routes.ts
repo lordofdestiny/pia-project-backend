@@ -30,5 +30,6 @@ AuthRouter.post(
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     AuthController.changePassword
 );
+AuthRouter.post("/unique", AuthController.uniqueCredential);
 
 export default AuthRouter;
