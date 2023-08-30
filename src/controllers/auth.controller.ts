@@ -6,6 +6,7 @@ import { PatientModel, IPatient } from "@models/patient";
 import { UserModel, IUser, IUserMethods } from "@models/user";
 
 interface IChangePasswordBody {
+    username?: string;
     old_password?: string;
     new_password?: string;
 }
@@ -27,10 +28,9 @@ export default class AuthController {
             }
             request.logIn(user, (err) => {
                 if (err) return next(err);
-                const { relative_picture_path: picture_path } = user;
-                response
-                    .status(200)
-                    .jsonp({ message: "logged in", picture_path, relative_picture_path: null });
+                user.profile_picture = user.relative_profile_picture;
+                user.relative_profile_picture = undefined;
+                response.status(200).json({ message: "logged in", user });
             });
         })(request, response, next);
     }
@@ -67,19 +67,23 @@ export default class AuthController {
         response: Response,
         next: NextFunction
     ) {
-        if (!request.isAuthenticated()) {
-            return response.sendStatus(401);
-        }
-        const {
-            user: { id },
-            body: { old_password, new_password },
-        } = request;
-
-        if (old_password == undefined || new_password == undefined) {
+        // if (!request.isAuthenticated()) {
+        //     return response.sendStatus(401);
+        // }
+        const id = request?.user?.id;
+        const { username, old_password, new_password } = request!.body;
+        if (
+            (id == undefined && username === undefined) ||
+            old_password == undefined ||
+            new_password == undefined
+        ) {
             return response.status(400).json({ message: "old and new password are required" });
         }
+        const getUserPromise = id
+            ? UserModel.findById(new Types.ObjectId(id))
+            : UserModel.findOne({ username });
         try {
-            const user = await UserModel.findById(new Types.ObjectId(id));
+            const user = await getUserPromise;
             if (!(await user!.comparePassword(old_password))) {
                 return response.status(409).json({ message: "old password incorrect" });
             }

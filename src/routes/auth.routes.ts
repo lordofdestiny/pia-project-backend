@@ -26,7 +26,7 @@ AuthRouter.post(
     AuthController.logout
 );
 AuthRouter.post(
-    "/change-password",
+    "/password",
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     AuthController.changePassword
 );
