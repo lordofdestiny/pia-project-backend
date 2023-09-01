@@ -1,7 +1,7 @@
 import { Strategy } from "passport-local";
 import { NextFunction, Request, Response } from "express";
-import { ManagerModel } from "@models/manager";
-import { EUserRole, IUser, UserModel } from "@models/user";
+import { ManagerModel } from "@models/manager.model";
+import { EUserRole, IUser, UserModel } from "@models/user.model";
 export class Authenticator {
     public static readonly nonAdminStrategy = new Strategy(this.verifyNonAdmin.bind(this));
     public static readonly adminStrategy = new Strategy(this.verifyAdmin.bind(this));

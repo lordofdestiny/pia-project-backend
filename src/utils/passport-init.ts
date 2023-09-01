@@ -1,7 +1,7 @@
 import passport from "passport";
 import path from "path";
 import { Authenticator } from "@utils/authenticate";
-import { SessionUser, session_fields } from "@models/user";
+import { SessionUser, session_fields } from "@models/user.model";
 
 //Initialize passport
 passport.use("local_default", Authenticator.nonAdminStrategy);

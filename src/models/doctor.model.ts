@@ -1,5 +1,5 @@
 import { Schema, Model } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user";
+import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
 export interface IDoctor extends IUser {
@@ -16,14 +16,17 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
     {
         licence_number: {
             type: String,
+            trim: true,
             required: [true, "Licence number is required"],
         },
         specialization: {
             type: String,
+            trim: true,
             required: [true, "Specialization is required"],
         },
         branch: {
             type: String,
+            trim: true,
             required: [true, "Branch is required"],
         },
     },
@@ -34,7 +37,5 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
         },
     }
 );
-
-// doctorSchema.plugin(mongooseLeanVirtuals);
 
 export const DoctorModel = UserModel.discriminator("Doctor", doctorSchema, EUserRole.DOCTOR);

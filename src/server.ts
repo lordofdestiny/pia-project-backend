@@ -3,6 +3,7 @@ import http from "http";
 import { resolve } from "path";
 import mongoose from "mongoose";
 
+// Make sure to import the utils to extend the prototypes before importing the app
 import "@utils/object";
 import "@utils/string";
 
@@ -35,7 +36,9 @@ if (process.env.SESSION_SECRET === undefined) {
 const server = http.createServer(app);
 
 server.listen(port, async () => {
-    console.log(`Express server running on ${ipv4}:${port}`);
+    for (const ip of ipv4) {
+        console.log(`Express server running on ${ip}:${port}`);
+    }
     try {
         await MongooseConnect.connect(mongooseConnectionURI);
         console.log(`Connected to MongoDB as <${mongoose.connection.user ?? "local dev"}>`);

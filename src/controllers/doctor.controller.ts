@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { DoctorModel, IDoctor } from "@models/doctor";
+import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { default_profile_picture } from "@utils/util";
-import { HydratedDocument, ProjectionType } from "mongoose";
 
 export default class DoctorController {
     public static async register(
@@ -48,7 +47,6 @@ export default class DoctorController {
             return response.status(200).json(
                 data.map((doc) => ({
                     ...doc,
-                    _id: undefined,
                     profile_picture: doc.relative_profile_picture,
                     relative_profile_picture: undefined,
                 }))
@@ -79,7 +77,6 @@ export default class DoctorController {
             const profile_picture = data.relative_profile_picture;
             return response.status(200).json({
                 ...data,
-                _id: undefined,
                 profile_picture,
                 relative_profile_picture: undefined,
             });

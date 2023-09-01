@@ -67,6 +67,7 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
     {
         username: {
             type: String,
+            trim: true,
             required: [true, "Username is required"],
             match: /^[_-]*[a-zA-Z][\w-]*$/,
             unique: true,
@@ -83,6 +84,7 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
         },
         email: {
             type: String,
+            trim: true,
             required: [true, "Email is required"],
             match: /^[\w-](?:\.?[\w-]){0,63}@[\w-]{1,63}(?:\.[\w-]{1,63})*$/,
             unique: true,
@@ -97,18 +99,22 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
         },
         first_name: {
             type: String,
+            trim: true,
             required: [true, "First name is required"],
         },
         last_name: {
             type: String,
+            trim: true,
             required: [true, "Last name is required"],
         },
         address: {
             type: String,
+            trim: true,
             required: [true, "Address is required"],
         },
         phone: {
             type: String,
+            trim: true,
             required: [true, "Phone number is required"],
             match: /^((\+381)|0)?[\s-]*6[\s-]*(([0-6]|[8-9]|(7[\s-]*[7-8]))(?:[ -]*\d[ -]*){6,7})$/,
         },
@@ -141,6 +147,7 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
         discriminatorKey: "type",
         toObject: {
             getters: true,
+            virtuals: true,
         },
     }
 );
@@ -172,8 +179,6 @@ userSchema.pre("save", async function (next) {
 
 userSchema.set("toObject", {
     transform: (_doc: HydratedDocument<IUser, IUserMethods>, result) => {
-        result.id = result._id?.toString()!;
-        delete result._id;
         delete result.__v;
         delete result.password;
         delete result.salt;

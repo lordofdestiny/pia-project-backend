@@ -1,7 +1,7 @@
 import { Router } from "express";
 import DoctorController from "@controllers/doctor.controller";
 import { Authenticator } from "@utils/authenticate";
-import { EUserRole } from "@models/user";
+import { EUserRole } from "@models/user.model";
 
 const DoctorRouter = Router();
 

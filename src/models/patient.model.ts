@@ -1,5 +1,5 @@
 import { Schema, Model } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user";
+import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 
 export interface IPatient extends IUser {}
 

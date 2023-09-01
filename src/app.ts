@@ -4,8 +4,6 @@ import morgan from "morgan";
 import passport from "passport";
 import express, { Express, Request, Response } from "express";
 
-// Make sure to import the string utils to extend the String prototype
-
 import {
     notFoundErrorHandler,
     validationErrorHandler,
@@ -16,7 +14,10 @@ import { Sessions } from "@middleware/session";
 
 import UserRouter from "@routes/user.routes";
 import AuthRouter from "@routes/auth.routes";
-/* Import the passport-init.ts file to initialize passport
+import SpecializationRouter from "@routes/specialization.routes";
+
+/*
+ * Import the passport-init.ts file to initialize passport
  * with the correct strategies and serialization/deserialization functions
  */
 import "@utils/passport-init";
@@ -46,6 +47,7 @@ app.use(
 // Routers
 app.use("/", UserRouter);
 app.use("/auth", AuthRouter);
+app.use("/specialization", SpecializationRouter);
 
 // Error handlers
 app.use(
