@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction, response } from "express";
-import { SpecializationModel, ISpecialization, IExamination } from "@models/specialization.model";
+import { SpecializationModel, ISpecialization } from "@models/specialization.model";
 import { MongooseError } from "mongoose";
 
 export default class SpecializationController {
     public static async get_all(request: Request, Response: Response, next: NextFunction) {
         try {
-            const specializations = await SpecializationModel.find().lean({ virtuals: true });
+            const specializations = await SpecializationModel.find()
+                .sort("name")
+                .populate("examinations")
+                .lean({ virtuals: true });
             Response.status(200).json(specializations);
         } catch (error) {
             next(error);
@@ -37,7 +40,9 @@ export default class SpecializationController {
             if (!specializationQuery) {
                 return response.sendStatus(400);
             }
-            const specialization = await specializationQuery.lean({ virtuals: true });
+            const specialization = await specializationQuery
+                .populate("examinations")
+                .lean({ virtuals: true });
             if (!specialization) {
                 return response.sendStatus(404);
             }

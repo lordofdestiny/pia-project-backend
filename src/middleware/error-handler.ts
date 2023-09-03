@@ -26,6 +26,8 @@ export async function validationErrorHandler(
         case "ValidationError":
             const { errors } = error as Error.ValidationError;
             return response.status(422).json({ errors, data: _request.body });
+        case "CastError":
+            return response.status(422).json({ message: "Invalid id" });
         default:
             next(error);
     }

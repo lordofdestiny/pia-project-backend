@@ -1,19 +1,13 @@
 import { Schema, Model, model } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
-
-export type IExamination = {
-    duration: number;
-    price: number;
-    disabled: boolean;
-};
+import { ExaminationModel, IExamination } from "./examination.model";
 
 export interface ISpecialization {
     name: string;
     examinations: IExamination[];
 }
 
-interface ISpecializationMethods extends IUserMethods {}
+interface ISpecializationMethods {}
 
 type TSpecializationModel = Model<ISpecialization, {}, ISpecializationMethods>;
 
@@ -30,23 +24,8 @@ const specializationSchema = new Schema<
         },
         examinations: [
             {
-                name: {
-                    type: String,
-                    trim: true,
-                    required: [true, "Name is required"],
-                },
-                duration: {
-                    type: Number,
-                    default: 30,
-                },
-                price: {
-                    type: Number,
-                    required: [true, "Price is required"],
-                },
-                disabled: {
-                    type: Boolean,
-                    default: false,
-                },
+                type: Schema.Types.ObjectId,
+                ref: "Examination",
             },
         ],
     },
@@ -59,3 +38,4 @@ const specializationSchema = new Schema<
 specializationSchema.plugin(mongooseLeanVirtuals);
 
 export const SpecializationModel = model("Specialization", specializationSchema, "specializations");
+console.log("specialization.model.ts");

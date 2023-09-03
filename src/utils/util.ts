@@ -5,7 +5,7 @@ export const default_profile_picture = path.resolve(
     "public",
     "resources",
     "img",
-    "default.png"
+    "default.jpeg"
 );
 
 export function relativizePicturePath(picture_path: string) {

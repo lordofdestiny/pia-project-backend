@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { UserModel } from "@models/user.model";
 import { relativizePicturePath } from "@utils/util";
 import { default_profile_picture } from "@utils/util";
+import path from "path";
 
 export default class UserController {
     public static async get_profile(request: Request, response: Response, next: NextFunction) {
@@ -94,7 +95,9 @@ export default class UserController {
             const old_profile_picture = user!.profile_picture;
             user!.profile_picture = profile_picture;
             await user!.save({ validateModifiedOnly: true });
-            await unlink(old_profile_picture);
+            if (old_profile_picture !== default_profile_picture) {
+                await unlink(old_profile_picture);
+            }
             const userObject = user?.toObject()!;
             return response.status(200).json(
                 Object.assign(userObject, {
@@ -114,7 +117,9 @@ export default class UserController {
             const old_profile_picture = user!.profile_picture;
             user!.profile_picture = default_profile_picture;
             await user!.save({ validateModifiedOnly: true });
-            await unlink(old_profile_picture);
+            if (old_profile_picture !== default_profile_picture) {
+                await unlink(old_profile_picture);
+            }
             const userObject = user?.toObject()!;
             return response.status(200).json(
                 Object.assign(userObject, {

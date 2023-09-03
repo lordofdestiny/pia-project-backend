@@ -12,7 +12,7 @@ export class Authenticator {
                 message: "user not found",
             });
         }
-        if (!user.approved) {
+        if (user.type === "patient" && !user.approved) {
             return done(null, false, {
                 message: "user not approved",
             });
@@ -22,7 +22,12 @@ export class Authenticator {
                 message: "incorrect password",
             });
         }
-        return done(null, user.toObject());
+        if (user?.type === "doctor") {
+            await user.populate("examinations");
+            await user.populate("specialization");
+            console.log(user.toObject());
+        }
+        return done(null, user!.toObject());
     }
 
     private static async verifyNonAdmin(username, password, done) {

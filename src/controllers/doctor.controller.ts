@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose, { ClientSession } from "mongoose";
+
 import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { default_profile_picture } from "@utils/util";
+import { SpecializationModel } from "@models/specialization.model";
 
 export default class DoctorController {
     public static async register(
-        request: Request<{}, {}, IDoctor>,
+        request: Request<{}, {}, Omit<IDoctor, "specialization"> & { specialization: string }>,
         response: Response,
         next: NextFunction
     ) {
@@ -13,7 +16,12 @@ export default class DoctorController {
         }
         const { body: data } = request;
         const profile_picture = request.file?.path ?? default_profile_picture;
+
         try {
+            const specialization = await SpecializationModel.findById(data.specialization);
+            if (specialization == null) {
+                return response.status(400).json({ message: "specialization not found" });
+            }
             const user = await DoctorModel.create({ ...data, profile_picture });
             response.status(201).json(user.toObject());
         } catch (err) {
@@ -21,29 +29,31 @@ export default class DoctorController {
         }
     }
 
-    private static readonly not_authenticated_get_all_filter = {
-        _id: 1,
-        username: 1,
-        first_name: 1,
-        last_name: 1,
-        specialization: 1,
-        profile_picture: 1,
-        relative_profile_picture: 1,
-        type: 0,
-    };
-
     public static async get_all(
         _request: Request<{}, {}, IDoctor>,
         response: Response,
         next: NextFunction
     ) {
+        const hide = {
+            __v: 0,
+            password: 0,
+            salt: 0,
+        };
         try {
-            const data = await DoctorModel.find(
-                {},
-                DoctorController.not_authenticated_get_all_filter
-            ).lean({
-                virtuals: true,
-            });
+            const data = await DoctorModel.find({}, hide)
+                .populate({
+                    path: "specialization",
+                    select: "name",
+                })
+                .populate({
+                    path: "examinations",
+                    match: {
+                        disabled: false,
+                    },
+                })
+                .lean({
+                    virtuals: true,
+                });
             return response.status(200).json(
                 data.map((doc) => ({
                     ...doc,
@@ -56,21 +66,30 @@ export default class DoctorController {
         }
     }
 
-    public static async get_by_id(
-        request: Request<{ id: "string" }, {}, IDoctor>,
+    public static async get_by_username(
+        request: Request<{ username: "string" }, {}, IDoctor>,
         response: Response,
         next: NextFunction
     ) {
-        const { id } = request.params;
+        const { username } = request.params;
+        const hide = {
+            __v: 0,
+            password: 0,
+            salt: 0,
+        };
         try {
-            const data = await DoctorModel.findOne(
-                { id },
-                {
-                    __v: 0,
-                    password: 0,
-                    salt: 0,
-                }
-            ).lean({ virtuals: true });
+            const data = await DoctorModel.findOne({ username }, hide)
+                .populate({
+                    path: "specialization",
+                    select: "name",
+                })
+                .populate({
+                    path: "examinations",
+                    match: {
+                        disabled: false,
+                    },
+                })
+                .lean({ virtuals: true });
             if (data == null) {
                 return response.status(404).json({ message: "doctor not found" });
             }

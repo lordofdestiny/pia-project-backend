@@ -39,9 +39,9 @@ export default class AuthController {
         return this.handle_login("local_default", request, response, next);
     };
 
-    public static async login_manager(request: Request, response: Response, next: NextFunction) {
+    public static login_manager = (request: Request, response: Response, next: NextFunction) => {
         return this.handle_login("local_manager", request, response, next);
-    }
+    };
 
     public static async logout(request: Request, response: Response, next: NextFunction) {
         // if (!request.isAuthenticated()) {
@@ -84,6 +84,9 @@ export default class AuthController {
             : UserModel.findOne({ username });
         try {
             const user = await getUserPromise;
+            if (!user) {
+                return response.status(404).json({ message: "user not found" });
+            }
             if (!(await user!.comparePassword(old_password))) {
                 return response.status(409).json({ message: "old password incorrect" });
             }

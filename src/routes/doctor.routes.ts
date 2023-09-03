@@ -7,9 +7,9 @@ const DoctorRouter = Router();
 
 DoctorRouter.get("/", DoctorController.get_all);
 DoctorRouter.get(
-    "/:id",
+    "/:username",
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
-    DoctorController.get_by_id
+    DoctorController.get_by_username
 );
 
 export default DoctorRouter;

@@ -1,10 +1,13 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
-import mongooseLeanVirtuals from "mongoose-lean-virtuals";
+import { ISpecialization } from "./specialization.model";
+import { IExamination, ExaminationModel } from "./examination.model";
+ExaminationModel;
 
 export interface IDoctor extends IUser {
     licence_number: string;
-    specialization: string;
+    specialization: ISpecialization;
+    examinations: IExamination[];
     branch: string;
 }
 
@@ -20,10 +23,16 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
             required: [true, "Licence number is required"],
         },
         specialization: {
-            type: String,
-            trim: true,
+            type: Schema.Types.ObjectId,
+            ref: "Specialization",
             required: [true, "Specialization is required"],
         },
+        examinations: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Examination",
+            },
+        ],
         branch: {
             type: String,
             trim: true,
