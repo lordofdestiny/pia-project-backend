@@ -1,9 +1,13 @@
 import { unlink } from "fs/promises";
 import { Request, Response, NextFunction } from "express";
-import { UserModel } from "@models/user.model";
+import { EUserRole, IUser, UserModel } from "@models/user.model";
 import { relativizePicturePath } from "@utils/util";
 import { default_profile_picture } from "@utils/util";
 import path from "path";
+import { DoctorModel, IDoctor } from "@models/doctor.model";
+import { IManager, ManagerModel } from "@models/manager.model";
+import { IPatient, PatientModel } from "@models/patient.model";
+import { Query, QueryWithHelpers } from "mongoose";
 
 export default class UserController {
     public static async get_profile(request: Request, response: Response, next: NextFunction) {
@@ -18,7 +22,13 @@ export default class UserController {
     }
 
     public static async update_profile(
-        request: Request<{ id: string }>,
+        request: Request<
+            { id: string },
+            {},
+            (Partial<IPatient> | Partial<IDoctor> | Partial<IManager>) & {
+                type: EUserRole;
+            }
+        >,
         response: Response,
         next: NextFunction
     ) {
@@ -26,17 +36,18 @@ export default class UserController {
             return UserController.update_profile_session(request, response, next);
         }
         const { id } = request.params;
-        const { body: data } = request;
+        const data = request.body;
+        const { type } = data ?? {};
+        if (type === undefined) {
+            return response.status(400).json({ message: "type is required" });
+        }
+        console.log(data);
         try {
-            const user = await UserModel.findOneAndUpdate(
-                { _id: id },
-                {
-                    $set: data,
-                },
-                {
-                    new: true,
-                    validateModifiedOnly: true,
-                }
+            const user = await (type === EUserRole.PATIENT
+                ? UserController.updatePatientProfile(id, data as IPatient)
+                : type === EUserRole.DOCTOR
+                ? UserController.updateDoctorProfile(id, data as IDoctor)
+                : UserController.updateManagerProfile(id, data as IManager)
             ).lean({ virtuals: true });
             return response.status(200).json(
                 Object.assign(user as any, {
@@ -47,6 +58,46 @@ export default class UserController {
         } catch (error) {
             next(error);
         }
+    }
+
+    private static updatePatientProfile(id: string, data: IPatient): Query<any, any, {}, IPatient> {
+        return PatientModel.findOneAndUpdate(
+            { _id: id },
+            {
+                $set: data,
+            },
+            {
+                new: true,
+                runValidators: true,
+                validateModifiedOnly: true,
+            }
+        );
+    }
+    private static updateDoctorProfile(id: string, data: IDoctor): Query<any, any, {}, IDoctor> {
+        return DoctorModel.findOneAndUpdate(
+            { _id: id },
+            {
+                $set: data,
+            },
+            {
+                new: true,
+                runValidators: true,
+                validateModifiedOnly: true,
+            }
+        ).populate("specialization");
+    }
+    private static updateManagerProfile(id: string, data: IManager): Query<any, any, {}, IManager> {
+        return ManagerModel.findOneAndUpdate(
+            { _id: id },
+            {
+                $set: data,
+            },
+            {
+                new: true,
+                runValidators: true,
+                validateModifiedOnly: true,
+            }
+        );
     }
 
     private static async update_profile_session(
@@ -67,11 +118,7 @@ export default class UserController {
             await user?.save({ validateModifiedOnly: true });
             request.session.reload((err) => {
                 if (err) next(err);
-                return response.status(200).json(
-                    Object.assign(user.toObject(), {
-                        type: undefined,
-                    })
-                );
+                return response.status(200).json(user.toObject());
             });
         } catch (error) {
             next(error);

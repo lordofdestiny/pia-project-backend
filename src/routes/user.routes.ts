@@ -23,20 +23,20 @@ UserRouter.get(
 );
 
 UserRouter.put(
-    "/:id/profile",
+    "/profile/:id",
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     UserController.update_profile
 );
 
 UserRouter.put(
-    "/:id/avatar",
+    "/avatar/:id",
     upload.single("profile_picture"),
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     UserController.update_avatar
 );
 
 UserRouter.delete(
-    "/:id/avatar",
+    "/avatar/:id",
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     UserController.delete_avatar
 );

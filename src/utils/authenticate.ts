@@ -25,7 +25,6 @@ export class Authenticator {
         if (user?.type === "doctor") {
             await user.populate("examinations");
             await user.populate("specialization");
-            console.log(user.toObject());
         }
         return done(null, user!.toObject());
     }

@@ -3,7 +3,16 @@ import crypto from "crypto";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
 import { relativizePicturePath } from "@utils/util";
-import { Schema, Model, model, Document, CallbackError, Types, HydratedDocument } from "mongoose";
+import {
+    Schema,
+    Model,
+    model,
+    Document,
+    CallbackError,
+    Types,
+    HydratedDocument,
+    Query,
+} from "mongoose";
 
 export enum EUserRole {
     USER = "user",
@@ -73,8 +82,8 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
             minlength: [4, "Username must be at least 6 characters long"],
             maxlength: [20, "Username must be at most 20 characters long"],
             validate: {
-                validator: async function (this: Document<IUser>, username: string) {
-                    return !(await this.$model("User").countDocuments({
+                validator: async function (this: Query<any, any>, username: string) {
+                    return !(await this.model.countDocuments({
                         username,
                     }));
                 },
@@ -88,8 +97,8 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
             match: /^[\w-](?:\.?[\w-]){0,63}@[\w-]{1,63}(?:\.[\w-]{1,63})*$/,
             unique: true,
             validate: {
-                validator: async function (this: Document<IUser>, email: string) {
-                    return !(await this.$model("User").countDocuments({
+                validator: async function (this: Query<any, any>, email: string) {
+                    return !(await this.model.countDocuments({
                         email,
                     }));
                 },

@@ -65,13 +65,15 @@ export function logErrorHandler(absoluteFolderPath: string) {
         );
         const { method, path: route } = request;
         const time = new Date();
+        const timestr = time.toLocaleString();
         const timestamp = Math.ceil(time.getTime() / 1000);
         const filename = `${timestamp} ${method} ${route.replaceAll("/", ".")}.log`;
         const filepath = resolve(absoluteFolderPath, filename);
 
         await writeFile(
             filepath,
-            `name : ${error.name}\n
+            `Error occured at: ${timestr}\n
+            name : ${error.name}\n
             message : ${error.message}\n
             stack : \n${error.stack}`,
             { encoding: "utf-8", flag: "w" }
