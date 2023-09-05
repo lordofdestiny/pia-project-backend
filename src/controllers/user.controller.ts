@@ -32,16 +32,12 @@ export default class UserController {
         response: Response,
         next: NextFunction
     ) {
-        if (request.isAuthenticated()) {
-            return UserController.update_profile_session(request, response, next);
-        }
         const { id } = request.params;
         const data = request.body;
         const { type } = data ?? {};
         if (type === undefined) {
             return response.status(400).json({ message: "type is required" });
         }
-        console.log(data);
         try {
             const user = await (type === EUserRole.PATIENT
                 ? UserController.updatePatientProfile(id, data as IPatient)
@@ -100,31 +96,6 @@ export default class UserController {
         );
     }
 
-    private static async update_profile_session(
-        request: Request<{ id: string }>,
-        response: Response,
-        next: NextFunction
-    ) {
-        if (!request.isAuthenticated()) {
-            return response.sendStatus;
-        }
-        const { body: data } = request;
-        try {
-            const user = await UserModel.findById(request.user.id)!;
-            if (user == null) {
-                return response.sendStatus(500);
-            }
-            Object.assign(user, data);
-            await user?.save({ validateModifiedOnly: true });
-            request.session.reload((err) => {
-                if (err) next(err);
-                return response.status(200).json(user.toObject());
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
     public static async update_avatar(request: Request, response: Response, next: NextFunction) {
         if (request.file === undefined) {
             if (request.file_not_image == undefined) {
@@ -174,6 +145,21 @@ export default class UserController {
                     relative_profile_picture: undefined,
                 })
             );
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    public static async delete_profile(request: Request, response: Response, next: NextFunction) {
+        const { id } = request.params;
+        try {
+            const user = await UserModel.findById(id);
+            const old_profile_picture = user!.profile_picture;
+            await user!.delete();
+            if (old_profile_picture !== default_profile_picture) {
+                await unlink(old_profile_picture);
+            }
+            return response.status(200).json({ message: "user deleted" });
         } catch (err) {
             next(err);
         }

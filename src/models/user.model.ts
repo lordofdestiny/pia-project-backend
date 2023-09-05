@@ -3,16 +3,7 @@ import crypto from "crypto";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
 import { relativizePicturePath } from "@utils/util";
-import {
-    Schema,
-    Model,
-    model,
-    Document,
-    CallbackError,
-    Types,
-    HydratedDocument,
-    Query,
-} from "mongoose";
+import { Schema, Model, model, CallbackError, HydratedDocument, Query } from "mongoose";
 
 export enum EUserRole {
     USER = "user",
@@ -82,10 +73,16 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
             minlength: [4, "Username must be at least 6 characters long"],
             maxlength: [20, "Username must be at most 20 characters long"],
             validate: {
-                validator: async function (this: Query<any, any>, username: string) {
-                    return !(await this.model.countDocuments({
-                        username,
-                    }));
+                validator: async function (this: any, username: string) {
+                    if (this.model.countDocuments) {
+                        return !(await this.model.countDocuments({
+                            username,
+                        }));
+                    } else {
+                        return !(await this.model("User").countDocuments({
+                            username,
+                        }));
+                    }
                 },
                 message: () => "Username already exists",
             },
@@ -97,10 +94,16 @@ const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
             match: /^[\w-](?:\.?[\w-]){0,63}@[\w-]{1,63}(?:\.[\w-]{1,63})*$/,
             unique: true,
             validate: {
-                validator: async function (this: Query<any, any>, email: string) {
-                    return !(await this.model.countDocuments({
-                        email,
-                    }));
+                validator: async function (this: any, email: string) {
+                    if (this.model.countDocuments) {
+                        return !(await this.model.countDocuments({
+                            email,
+                        }));
+                    } else {
+                        return !(await this.model("User").countDocuments({
+                            email,
+                        }));
+                    }
                 },
                 message: () => "Email already exists",
             },

@@ -23,7 +23,16 @@ export default class DoctorController {
                 return response.status(400).json({ message: "specialization not found" });
             }
             const user = await DoctorModel.create({ ...data, profile_picture });
-            response.status(201).json(user.toObject());
+            const doctor = await DoctorModel.populate(user, {
+                path: "specialization",
+                select: "name",
+            });
+            response.status(201).json(
+                Object.assign(doctor.toObject({ virtuals: true }), {
+                    profile_picture: doctor.relative_profile_picture,
+                    relative_profile_picture: undefined,
+                })
+            );
         } catch (err) {
             next(err);
         }

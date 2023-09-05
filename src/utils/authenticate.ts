@@ -12,9 +12,9 @@ export class Authenticator {
                 message: "user not found",
             });
         }
-        if (user.type === "patient" && !user.approved) {
+        if (user.type === "patient" && user.status !== "active") {
             return done(null, false, {
-                message: "user not approved",
+                message: "user not active",
             });
         }
         if (!(await user.comparePassword(password))) {

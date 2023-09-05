@@ -8,6 +8,7 @@ export interface IDoctor extends IUser {
     licence_number: string;
     specialization: ISpecialization;
     examinations: IExamination[];
+    examination_requests: IExamination[];
     branch: string;
 }
 
@@ -27,17 +28,23 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
             ref: "Specialization",
             required: [true, "Specialization is required"],
         },
+        branch: {
+            type: String,
+            trim: true,
+            required: [true, "Branch is required"],
+        },
         examinations: [
             {
                 type: Schema.Types.ObjectId,
                 ref: "Examination",
             },
         ],
-        branch: {
-            type: String,
-            trim: true,
-            required: [true, "Branch is required"],
-        },
+        examination_requests: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Examination",
+            },
+        ],
     },
     {
         discriminatorKey: "type",
