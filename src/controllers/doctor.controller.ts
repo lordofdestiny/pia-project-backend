@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import mongoose, { ClientSession } from "mongoose";
+import mongoose, { ClientSession, Types } from "mongoose";
 
 import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { default_profile_picture } from "@utils/util";
 import { SpecializationModel } from "@models/specialization.model";
+import { ExaminationModel } from "@models/examination.model";
 
 export default class DoctorController {
     public static async register(
@@ -175,6 +176,53 @@ export default class DoctorController {
                     relative_profile_picture: undefined,
                 })
             );
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    public static async respond_to_examination_request(
+        request: Request<
+            {
+                id: string;
+            },
+            {
+                examinationID: string;
+                action: boolean;
+            }
+        >,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { id: doctorId } = request.params;
+        const { examinationId, action } = request.body;
+
+        try {
+            const doctor = await DoctorModel.findById(doctorId);
+            if (doctor == null) {
+                return response.status(404).json({ message: "doctor not found" });
+            }
+            const examination = await ExaminationModel.findById(examinationId);
+            if (examination == null) {
+                return response.status(404).json({ message: "examination not found" });
+            }
+
+            const objExamId = new Types.ObjectId(examinationId);
+            const update = {
+                $pull: {
+                    examination_requests: objExamId,
+                },
+            };
+            if (action) {
+                Object.assign(update, {
+                    $push: {
+                        examinations: objExamId,
+                    },
+                });
+            }
+
+            await doctor.updateOne(update);
+            return response.status(200).json({ message: "success" });
         } catch (err) {
             next(err);
         }

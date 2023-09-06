@@ -18,10 +18,17 @@ DoctorRouter.get(
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     DoctorController.get_by_username
 );
+
 DoctorRouter.put(
     "/:id/examinations",
-    Authenticator.authenticate([EUserRole.DOCTOR, EUserRole.MANAGER]),
+    Authenticator.authenticate([EUserRole.DOCTOR]),
     DoctorController.update_examinations
+);
+
+DoctorRouter.post(
+    "/:id/examinations/response",
+    Authenticator.authenticate([EUserRole.MANAGER]),
+    DoctorController.respond_to_examination_request
 );
 
 export default DoctorRouter;
