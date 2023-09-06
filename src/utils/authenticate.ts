@@ -23,8 +23,19 @@ export class Authenticator {
             });
         }
         if (user?.type === "doctor") {
-            await user.populate("examinations");
             await user.populate("specialization");
+            await user.populate({
+                path: "examinations",
+                match: {
+                    disabled: false,
+                },
+            });
+            await user.populate({
+                path: "examination_requests",
+                match: {
+                    disabled: false,
+                },
+            });
         }
         return done(null, user!.toObject());
     }

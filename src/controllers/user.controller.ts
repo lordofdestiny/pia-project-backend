@@ -67,7 +67,11 @@ export default class UserController {
                 runValidators: true,
                 validateModifiedOnly: true,
             }
-        );
+        ).select({
+            __v: 0,
+            password: 0,
+            salt: 0,
+        });
     }
     private static updateDoctorProfile(id: string, data: IDoctor): Query<any, any, {}, IDoctor> {
         return DoctorModel.findOneAndUpdate(
@@ -80,7 +84,13 @@ export default class UserController {
                 runValidators: true,
                 validateModifiedOnly: true,
             }
-        ).populate("specialization");
+        )
+            .populate("specialization")
+            .select({
+                __v: 0,
+                password: 0,
+                salt: 0,
+            });
     }
     private static updateManagerProfile(id: string, data: IManager): Query<any, any, {}, IManager> {
         return ManagerModel.findOneAndUpdate(
@@ -93,7 +103,11 @@ export default class UserController {
                 runValidators: true,
                 validateModifiedOnly: true,
             }
-        );
+        ).select({
+            __v: 0,
+            password: 0,
+            salt: 0,
+        });
     }
 
     public static async update_avatar(request: Request, response: Response, next: NextFunction) {

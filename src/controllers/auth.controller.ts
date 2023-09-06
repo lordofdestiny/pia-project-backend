@@ -44,9 +44,6 @@ export default class AuthController {
     };
 
     public static async logout(request: Request, response: Response, next: NextFunction) {
-        // if (!request.isAuthenticated()) {
-        //     return response.sendStatus(401);
-        // }
         request.logout(
             {
                 keepSessionInfo: false,
@@ -67,9 +64,6 @@ export default class AuthController {
         response: Response,
         next: NextFunction
     ) {
-        // if (!request.isAuthenticated()) {
-        //     return response.sendStatus(401);
-        // }
         const id = request?.user?.id;
         const { username, old_password, new_password } = request!.body;
         if (

@@ -50,12 +50,19 @@ export default class DoctorController {
         };
         try {
             const data = await DoctorModel.find({}, hide)
+
                 .populate({
                     path: "specialization",
                     select: "name",
                 })
                 .populate({
                     path: "examinations",
+                    match: {
+                        disabled: false,
+                    },
+                })
+                .populate({
+                    path: "examination_requests",
                     match: {
                         disabled: false,
                     },
@@ -98,6 +105,13 @@ export default class DoctorController {
                         disabled: false,
                     },
                 })
+                .populate({
+                    path: "examination_requests",
+                    match: {
+                        disabled: false,
+                    },
+                })
+
                 .lean({ virtuals: true });
             if (data == null) {
                 return response.status(404).json({ message: "doctor not found" });
@@ -108,6 +122,59 @@ export default class DoctorController {
                 profile_picture,
                 relative_profile_picture: undefined,
             });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    public static async update_examinations(
+        request: Request<
+            { id: string },
+            {
+                offered: string[];
+                requested: string[];
+            }
+        >,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { id } = request.params;
+        const { offered, requested } = request.body;
+        try {
+            const doctor = await DoctorModel.findByIdAndUpdate(
+                id,
+                {
+                    examitions: offered.map(mongoose.Types.ObjectId),
+                    examination_requests: requested.map(mongoose.Types.ObjectId),
+                },
+                {
+                    new: true,
+                    runValidators: false,
+                }
+            )
+                .populate("specialization", "name")
+                .populate({
+                    path: "examinations",
+                    match: {
+                        disabled: false,
+                    },
+                })
+                .populate({
+                    path: "examination_requests",
+                    match: {
+                        disabled: false,
+                    },
+                })
+                .lean({ virtuals: true });
+            if (doctor == null) {
+                return response.status(404).json({ message: "doctor not found" });
+            }
+            return response.status(200).json(
+                Object.assign(doctor, {
+                    profile_picture: doctor.relative_profile_picture,
+                    relative_profile_picture: undefined,
+                })
+            );
         } catch (err) {
             next(err);
         }
