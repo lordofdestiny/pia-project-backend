@@ -6,10 +6,10 @@ export interface IPatientNotification {
     end: Date;
 }
 
-const NotificationSchemma = new Schema<IPatientNotification>({
+const PromotionSchema = new Schema<IPatientNotification>({
     message: String,
     start: Date,
     end: Date,
 });
 
-export const NotificationModel = model("Notification", NotificationSchemma, "notifications");
+export const PromotionModel = model("Promotions", PromotionSchema, "promotions");

@@ -1,6 +1,6 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
-import { IPatientNotification } from "./notification.model";
+import { IPatientNotification } from "./promotion.model";
 
 export enum EPatientStatus {
     CREATED = "created",

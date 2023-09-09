@@ -5,6 +5,7 @@ import ManagerController from "@controllers/manager.controller";
 const ManagerRouter = Router();
 
 ManagerRouter.post("/register", disable, ManagerController.register);
-ManagerRouter.post("/notification", ManagerController.create_notification);
+ManagerRouter.get("/promotions", ManagerController.get_promotions);
+ManagerRouter.post("/promotions", ManagerController.create_promotion);
 
 export default ManagerRouter;
