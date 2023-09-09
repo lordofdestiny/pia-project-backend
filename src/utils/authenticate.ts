@@ -1,10 +1,28 @@
 import { Strategy } from "passport-local";
 import { NextFunction, Request, Response } from "express";
 import { ManagerModel } from "@models/manager.model";
-import { EUserRole, IUser, UserModel } from "@models/user.model";
+import { EUserRole, UserModel } from "@models/user.model";
 export class Authenticator {
     public static readonly nonAdminStrategy = new Strategy(this.verifyNonAdmin.bind(this));
     public static readonly adminStrategy = new Strategy(this.verifyAdmin.bind(this));
+
+    private static async verifyNonAdmin(username, password, done) {
+        try {
+            const user = await UserModel.findOne({ username, $nor: [{ type: "manager" }] });
+            this.handleVerify(password, user, done);
+        } catch (err) {
+            return done(err);
+        }
+    }
+
+    private static async verifyAdmin(username, password, done) {
+        try {
+            const user = await ManagerModel.findOne({ username });
+            this.handleVerify(password, user, done);
+        } catch (err) {
+            return done(err);
+        }
+    }
 
     private static async handleVerify(password, user, done) {
         if (user == null) {
@@ -23,39 +41,23 @@ export class Authenticator {
             });
         }
         if (user?.type === "doctor") {
-            await user.populate("specialization");
+            await user.populate({
+                path: "specialization",
+                populate: {
+                    path: "examinations",
+                    match: {
+                        status: "active",
+                    },
+                },
+            });
             await user.populate({
                 path: "examinations",
                 match: {
-                    disabled: false,
-                },
-            });
-            await user.populate({
-                path: "examination_requests",
-                match: {
-                    disabled: false,
+                    status: "active",
                 },
             });
         }
-        return done(null, user!.toObject());
-    }
-
-    private static async verifyNonAdmin(username, password, done) {
-        try {
-            const user = await UserModel.findOne({ username, $nor: [{ type: "manager" }] });
-            this.handleVerify(password, user, done);
-        } catch (err) {
-            return done(err);
-        }
-    }
-
-    private static async verifyAdmin(username, password, done) {
-        try {
-            const user = await ManagerModel.findOne({ username });
-            this.handleVerify(password, user, done);
-        } catch (err) {
-            return done(err);
-        }
+        return done(null, user!.toObject({ virtuals: true }));
     }
 
     static authenticate(user_types: Exclude<EUserRole, EUserRole.USER>[]) {

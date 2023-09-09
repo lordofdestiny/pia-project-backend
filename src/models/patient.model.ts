@@ -1,7 +1,8 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
+import { IPatientNotification } from "./notification.model";
 
-enum EPatientStatus {
+export enum EPatientStatus {
     CREATED = "created",
     ACTIVE = "active",
     DELETED = "deleted",
@@ -9,13 +10,14 @@ enum EPatientStatus {
 
 export interface IPatient extends IUser {
     status: EPatientStatus;
+    notifications: { notification: IPatientNotification; seen: boolean }[];
 }
 
 interface IPatientMethods extends IUserMethods {}
 
 type TPatientModel = Model<IPatient, {}, IPatientMethods>;
 
-const parientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
+const ParientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
     {
         status: {
             type: String,
@@ -23,6 +25,18 @@ const parientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
             default: EPatientStatus.CREATED,
             enum: Object.values(EPatientStatus),
         },
+        notifications: [
+            {
+                notification: {
+                    type: Schema.Types.ObjectId,
+                    ref: "Notification",
+                },
+                seen: {
+                    type: Boolean,
+                    default: false,
+                },
+            },
+        ],
     },
     {
         discriminatorKey: "type",
@@ -32,4 +46,4 @@ const parientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
     }
 );
 
-export const PatientModel = UserModel.discriminator("Patient", parientSchema, EUserRole.PATIENT);
+export const PatientModel = UserModel.discriminator("Patient", ParientSchema, EUserRole.PATIENT);

@@ -1,22 +1,23 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import { ISpecialization } from "./specialization.model";
-import { IExamination, ExaminationModel } from "./examination.model";
-ExaminationModel;
+import { IExamination } from "./specialization.model";
 
 export interface IDoctor extends IUser {
     licence_number: string;
     specialization: ISpecialization;
-    examinations: IExamination[];
-    examination_requests: IExamination[];
+    examinations: string[];
     branch: string;
+    vacations: {
+        start_date: Date;
+        end_date: Date;
+    }[];
 }
-
 interface IDoctorMethods extends IUserMethods {}
 
 type TDoctorModel = Model<IDoctor, {}, IDoctorMethods>;
 
-const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
+const DoctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
     {
         licence_number: {
             type: String,
@@ -39,10 +40,10 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
                 ref: "Examination",
             },
         ],
-        examination_requests: [
+        vacations: [
             {
-                type: Schema.Types.ObjectId,
-                ref: "Examination",
+                start_date: Date,
+                end_date: Date,
             },
         ],
     },
@@ -54,4 +55,4 @@ const doctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
     }
 );
 
-export const DoctorModel = UserModel.discriminator("Doctor", doctorSchema, EUserRole.DOCTOR);
+export const DoctorModel = UserModel.discriminator("Doctor", DoctorSchema, EUserRole.DOCTOR);

@@ -14,12 +14,6 @@ UserRouter.use("/patients", PatientRouter);
 UserRouter.use("/doctors", DoctorRouter);
 UserRouter.use("/managers", ManagerRouter);
 
-UserRouter.get(
-    "/profile",
-    Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
-    UserController.get_profile
-);
-
 UserRouter.put(
     "/profile/:id",
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),

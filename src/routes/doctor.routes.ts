@@ -6,18 +6,14 @@ import { upload } from "@utils/upload";
 
 const DoctorRouter = Router();
 DoctorRouter.post(
+    // ? Maybe can be removed
     "/",
     Authenticator.authenticate([EUserRole.MANAGER]),
     upload.single("profile_picture"),
     DoctorController.register
 );
 
-DoctorRouter.get("/", DoctorController.get_all);
-DoctorRouter.get(
-    "/:username",
-    Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
-    DoctorController.get_by_username
-);
+DoctorRouter.get("/", DoctorController.get_doctors);
 
 DoctorRouter.put(
     "/:id/examinations",
@@ -25,10 +21,10 @@ DoctorRouter.put(
     DoctorController.update_examinations
 );
 
-DoctorRouter.post(
-    "/:id/examinations/response",
-    Authenticator.authenticate([EUserRole.MANAGER]),
-    DoctorController.respond_to_examination_request
+DoctorRouter.put(
+    "/:id/vacations",
+    Authenticator.authenticate([EUserRole.DOCTOR]),
+    DoctorController.add_vacation
 );
 
 export default DoctorRouter;

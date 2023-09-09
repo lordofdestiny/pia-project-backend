@@ -1,17 +1,70 @@
-import { Schema, Model, model } from "mongoose";
+import { ObjectId } from "mongodb";
+import { Schema, Model, model, Types } from "mongoose";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
-import { ExaminationModel, IExamination } from "./examination.model";
+
+export enum ExaminationStatus {
+    REQUESTED = "requested",
+    ACTIVE = "active",
+    INACTIVE = "inactive",
+}
+
+export type IExamination = {
+    id: string;
+    specialization: Types.ObjectId;
+    name: string;
+    duration: number;
+    price: number;
+    status: ExaminationStatus;
+};
+
+export const ExaminationSchema = new Schema<IExamination>(
+    {
+        specialization: {
+            type: Schema.Types.ObjectId,
+            ref: "Specialization",
+            required: [true, "Specialization is required"],
+        },
+        name: {
+            type: String,
+            trim: true,
+            required: [true, "Name is required"],
+        },
+        duration: {
+            type: Number,
+            default: 30,
+        },
+        price: {
+            type: Number,
+            required: [true, "Price is required"],
+        },
+        status: {
+            type: String,
+            required: true,
+            enum: Object.values(ExaminationStatus),
+            default: ExaminationStatus.ACTIVE,
+        },
+    },
+    {
+        autoCreate: false,
+        toObject: {
+            virtuals: true,
+        },
+    }
+);
+ExaminationSchema.plugin(mongooseLeanVirtuals);
+export const ExaminationModel = model("Examination", ExaminationSchema, "examinations");
 
 export interface ISpecialization {
+    id: string;
     name: string;
-    examinations: IExamination[];
+    examinations: ObjectId[];
 }
 
 interface ISpecializationMethods {}
 
 type TSpecializationModel = Model<ISpecialization, {}, ISpecializationMethods>;
 
-const specializationSchema = new Schema<
+const SpecializationSchema = new Schema<
     ISpecialization,
     TSpecializationModel,
     ISpecializationMethods
@@ -30,12 +83,13 @@ const specializationSchema = new Schema<
         ],
     },
     {
+        autoCreate: false,
         toObject: {
             virtuals: true,
         },
     }
 );
-specializationSchema.plugin(mongooseLeanVirtuals);
+SpecializationSchema.plugin(mongooseLeanVirtuals);
 
-export const SpecializationModel = model("Specialization", specializationSchema, "specializations");
+export const SpecializationModel = model("Specialization", SpecializationSchema, "specializations");
 console.log("specialization.model.ts");

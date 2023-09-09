@@ -3,7 +3,7 @@ import crypto from "crypto";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
 import { relativizePicturePath } from "@utils/util";
-import { Schema, Model, model, CallbackError, HydratedDocument, Query } from "mongoose";
+import { Schema, Model, model, CallbackError, HydratedDocument } from "mongoose";
 
 export enum EUserRole {
     USER = "user",
@@ -62,7 +62,7 @@ export interface IUserVirtuals {
 
 type TUserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
 
-const userSchema = new Schema<IUser, TUserModel, IUserMethods>(
+const UserSchema = new Schema<IUser, TUserModel, IUserMethods>(
     {
         username: {
             type: String,
@@ -167,11 +167,11 @@ async function digestAndBcryptPassword(password: string, salt: string, algorithm
     return bcrypt.hash(digest, salt);
 }
 
-userSchema.virtual("relative_profile_picture").get(function (this: IUser) {
+UserSchema.virtual("relative_profile_picture").get(function (this: IUser) {
     return relativizePicturePath(this.profile_picture);
 });
 
-userSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();
     if (this.password === undefined) return next(new Error("Password is required"));
     try {
@@ -183,7 +183,7 @@ userSchema.pre("save", async function (next) {
     }
 });
 
-userSchema.set("toObject", {
+UserSchema.set("toObject", {
     transform: (_doc: HydratedDocument<IUser, IUserMethods>, result) => {
         delete result.__v;
         delete result.password;
@@ -192,10 +192,10 @@ userSchema.set("toObject", {
     },
 });
 
-userSchema.method("comparePassword", async function (password: string) {
+UserSchema.method("comparePassword", async function (password: string) {
     return bcrypt.compare(await digestPassword(password, this.salt), this.password!);
 });
 
-userSchema.plugin(mongooseLeanVirtuals);
+UserSchema.plugin(mongooseLeanVirtuals);
 
-export const UserModel = model<IUser, TUserModel>("User", userSchema, "users");
+export const UserModel = model<IUser, TUserModel>("User", UserSchema, "users");

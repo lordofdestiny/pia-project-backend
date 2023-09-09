@@ -10,17 +10,6 @@ import { IPatient, PatientModel } from "@models/patient.model";
 import { Query, QueryWithHelpers } from "mongoose";
 
 export default class UserController {
-    public static async get_profile(request: Request, response: Response, next: NextFunction) {
-        // if (!request.isAuthenticated()) {
-        //     return response.sendStatus;
-        // }
-        try {
-            return response.status(200).json({ ...request.user, id: undefined, type: undefined });
-        } catch (error) {
-            return next(error);
-        }
-    }
-
     public static async update_profile(
         request: Request<
             { id: string },
@@ -39,11 +28,25 @@ export default class UserController {
             return response.status(400).json({ message: "type is required" });
         }
         try {
+            if ((<any>data).specialization) {
+                (<any>data).examinations = [];
+            }
+            const args = [
+                { _id: id },
+                {
+                    $set: data,
+                },
+                {
+                    new: true,
+                    runValidators: true,
+                    validateModifiedOnly: true,
+                },
+            ];
             const user = await (type === EUserRole.PATIENT
-                ? UserController.updatePatientProfile(id, data as IPatient)
+                ? UserController.updatePatientProfile(...args)
                 : type === EUserRole.DOCTOR
-                ? UserController.updateDoctorProfile(id, data as IDoctor)
-                : UserController.updateManagerProfile(id, data as IManager)
+                ? UserController.updateDoctorProfile(...args)
+                : UserController.updateManagerProfile(...args)
             ).lean({ virtuals: true });
             return response.status(200).json(
                 Object.assign(user as any, {
@@ -56,61 +59,54 @@ export default class UserController {
         }
     }
 
-    private static updatePatientProfile(id: string, data: IPatient): Query<any, any, {}, IPatient> {
-        return PatientModel.findOneAndUpdate(
-            { _id: id },
-            {
-                $set: data,
-            },
-            {
-                new: true,
-                runValidators: true,
-                validateModifiedOnly: true,
-            }
-        ).select({
+    private static updatePatientProfile(...args): Query<any, any, {}, IPatient> {
+        return PatientModel.findOneAndUpdate(...args).select({
             __v: 0,
             password: 0,
             salt: 0,
         });
     }
-    private static updateDoctorProfile(id: string, data: IDoctor): Query<any, any, {}, IDoctor> {
-        return DoctorModel.findOneAndUpdate(
-            { _id: id },
-            {
-                $set: data,
-            },
-            {
-                new: true,
-                runValidators: true,
-                validateModifiedOnly: true,
-            }
-        )
-            .populate("specialization")
+    private static updateDoctorProfile(...args): Query<any, any, {}, IDoctor> {
+        if (args[0].specialization) {
+            args[0].examinations = [];
+        }
+        return DoctorModel.findOneAndUpdate(...args)
+            .populate({
+                path: "specialization",
+                populate: {
+                    path: "examinations",
+                    match: {
+                        status: "active",
+                    },
+                },
+            })
+            .populate({
+                path: "examinations",
+                match: {
+                    status: "active",
+                },
+            })
             .select({
                 __v: 0,
                 password: 0,
                 salt: 0,
             });
     }
-    private static updateManagerProfile(id: string, data: IManager): Query<any, any, {}, IManager> {
-        return ManagerModel.findOneAndUpdate(
-            { _id: id },
-            {
-                $set: data,
-            },
-            {
-                new: true,
-                runValidators: true,
-                validateModifiedOnly: true,
-            }
-        ).select({
+    private static updateManagerProfile(...args): Query<any, any, {}, IManager> {
+        return ManagerModel.findOneAndUpdate(...args).select({
             __v: 0,
             password: 0,
             salt: 0,
         });
     }
 
-    public static async update_avatar(request: Request, response: Response, next: NextFunction) {
+    public static async update_avatar(
+        request: Request<{
+            id: string;
+        }>,
+        response: Response,
+        next: NextFunction
+    ) {
         if (request.file === undefined) {
             if (request.file_not_image == undefined) {
                 return response.status(400).json({ message: "no file was sent" });
@@ -120,9 +116,34 @@ export default class UserController {
                     .json({ message: "file that was send was not an image" });
             }
         }
-        const { id } = request.params;
-        const profile_picture = request.file!.path;
+        UserController.impl_update_profile_picture(request.file!.path, request, response, next);
+    }
+
+    public static async delete_avatar(
+        request: Request<{
+            id: string;
+        }>,
+        response: Response,
+        next: NextFunction
+    ) {
+        UserController.impl_update_profile_picture(
+            default_profile_picture,
+            request,
+            response,
+            next
+        );
+    }
+
+    private static async impl_update_profile_picture(
+        profile_picture,
+        request: Request<{
+            id: string;
+        }>,
+        response: Response,
+        next: NextFunction
+    ) {
         try {
+            const { id } = request.params;
             const user = await UserModel.findById(id);
             const old_profile_picture = user!.profile_picture;
             user!.profile_picture = profile_picture;
@@ -130,41 +151,19 @@ export default class UserController {
             if (old_profile_picture !== default_profile_picture) {
                 await unlink(old_profile_picture);
             }
-            const userObject = user?.toObject()!;
-            return response.status(200).json(
-                Object.assign(userObject, {
-                    profile_picture: relativizePicturePath(profile_picture),
-                    relative_profile_picture: undefined,
-                })
-            );
+            return response
+                .status(200)
+                .json({ profile_picture: relativizePicturePath(profile_picture) });
         } catch (err) {
             next(err);
         }
     }
 
-    public static async delete_avatar(request: Request, response: Response, next: NextFunction) {
-        const { id } = request.params;
-        try {
-            const user = await UserModel.findById(id);
-            const old_profile_picture = user!.profile_picture;
-            user!.profile_picture = default_profile_picture;
-            await user!.save({ validateModifiedOnly: true });
-            if (old_profile_picture !== default_profile_picture) {
-                await unlink(old_profile_picture);
-            }
-            const userObject = user?.toObject()!;
-            return response.status(200).json(
-                Object.assign(userObject, {
-                    profile_picture: relativizePicturePath(default_profile_picture),
-                    relative_profile_picture: undefined,
-                })
-            );
-        } catch (err) {
-            next(err);
-        }
-    }
-
-    public static async delete_profile(request: Request, response: Response, next: NextFunction) {
+    public static async delete_profile(
+        request: Request<{ id: string }>,
+        response: Response,
+        next: NextFunction
+    ) {
         const { id } = request.params;
         try {
             const user = await UserModel.findById(id);

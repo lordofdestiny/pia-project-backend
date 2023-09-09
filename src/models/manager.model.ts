@@ -7,7 +7,7 @@ interface IManagerMethods extends IUserMethods {}
 
 type TManagerModel = Model<IManager, {}, IManagerMethods>;
 
-const managerSchema = new Schema<IManager, TManagerModel, IManagerMethods>(
+const ManagerSchema = new Schema<IManager, TManagerModel, IManagerMethods>(
     {},
     {
         discriminatorKey: "type",
@@ -17,4 +17,4 @@ const managerSchema = new Schema<IManager, TManagerModel, IManagerMethods>(
     }
 );
 
-export const ManagerModel = UserModel.discriminator("Manager", managerSchema, EUserRole.MANAGER);
+export const ManagerModel = UserModel.discriminator("Manager", ManagerSchema, EUserRole.MANAGER);

@@ -21,7 +21,6 @@ import SpecializationRouter from "@routes/specialization.routes";
  * with the correct strategies and serialization/deserialization functions
  */
 import "@utils/passport-init";
-import ExaminationsRouter from "@routes/examination.routes";
 
 const app: Express = express();
 
@@ -48,7 +47,6 @@ app.use(
 // Routers
 app.use("/", UserRouter);
 app.use("/auth", AuthRouter);
-app.use("/examinations", ExaminationsRouter);
 app.use("/specialization", SpecializationRouter);
 
 // Error handlers
