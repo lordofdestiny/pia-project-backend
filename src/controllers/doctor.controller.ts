@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { default_profile_picture, resolvePicturePath } from "@utils/util";
-import { ExaminationModel, SpecializationModel } from "@models/specialization.model";
+import { SpecializationModel } from "@models/specialization.model";
 import { DateTime } from "luxon";
 
 export default class DoctorController {

@@ -1,7 +1,6 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import { ISpecialization } from "./specialization.model";
-import { IExamination } from "./specialization.model";
 
 export interface IDoctor extends IUser {
     licence_number: string;

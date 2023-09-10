@@ -1,13 +1,8 @@
 import { Request, Response, NextFunction, response } from "express";
-import {
-    SpecializationModel,
-    ISpecialization,
-    ExaminationModel,
-    ExaminationStatus,
-    IExamination,
-} from "@models/specialization.model";
 import { MongooseError, Types } from "mongoose";
 import { ObjectId } from "mongodb";
+import { SpecializationModel } from "@models/specialization.model";
+import { ExaminationModel, ExaminationStatus } from "@models/examination.model";
 
 export default class SpecializationController {
     public static async get_specialization(
