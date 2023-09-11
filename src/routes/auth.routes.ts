@@ -2,7 +2,8 @@ import express, { Router } from "express";
 import AuthController from "@controllers/auth.controller";
 import { EUserRole, IUser } from "@models/user.model";
 import { Authenticator } from "@utils/authenticate";
-const AuthRouter = Router();
+
+export const AuthRouter = Router();
 
 // Common routes
 AuthRouter.post("/login", AuthController.login_default);
@@ -19,5 +20,3 @@ AuthRouter.post(
     AuthController.changePassword
 );
 AuthRouter.post("/unique", AuthController.uniqueCredential);
-
-export default AuthRouter;

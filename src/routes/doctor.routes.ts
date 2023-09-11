@@ -4,7 +4,7 @@ import { Authenticator } from "@utils/authenticate";
 import { EUserRole } from "@models/user.model";
 import { upload } from "@utils/upload";
 
-const DoctorRouter = Router();
+export const DoctorRouter = Router();
 DoctorRouter.post(
     // ? Maybe can be removed
     "/",
@@ -26,5 +26,3 @@ DoctorRouter.put(
     Authenticator.authenticate([EUserRole.DOCTOR]),
     DoctorController.add_vacation
 );
-
-export default DoctorRouter;

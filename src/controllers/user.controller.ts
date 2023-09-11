@@ -1,13 +1,12 @@
 import { unlink } from "fs/promises";
 import { Request, Response, NextFunction } from "express";
-import { EUserRole, IUser, UserModel } from "@models/user.model";
+import { EUserRole, UserModel } from "@models/user.model";
 import { relativizePicturePath } from "@utils/util";
 import { default_profile_picture } from "@utils/util";
-import path from "path";
 import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { IManager, ManagerModel } from "@models/manager.model";
 import { IPatient, PatientModel } from "@models/patient.model";
-import { Query, QueryWithHelpers } from "mongoose";
+import { Query } from "mongoose";
 
 export default class UserController {
     public static async update_profile(

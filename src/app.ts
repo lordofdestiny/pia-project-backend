@@ -12,9 +12,10 @@ import {
 } from "./middleware/error-handler";
 import { Sessions } from "@middleware/session";
 
-import UserRouter from "@routes/user.routes";
-import AuthRouter from "@routes/auth.routes";
-import SpecializationRouter from "@routes/specialization.routes";
+import { UserRouter } from "@routes/user.routes";
+import { AuthRouter } from "@routes/auth.routes";
+import { AppointmentsRouter } from "@routes/appointments.routes";
+import { SpecializationRouter } from "@routes/specialization.routes";
 
 /*
  * Import the passport-init.ts file to initialize passport
@@ -38,7 +39,7 @@ app.use(express.json(), express.urlencoded({ extended: false }));
 
 // Public resource files
 app.use(
-    express.static(path.resolve(__dirname, "../public"), {
+    express.static(path.resolve(__dirname, "..", "public"), {
         index: false,
         dotfiles: "ignore",
     })
@@ -47,6 +48,7 @@ app.use(
 // Routers
 app.use("/", UserRouter);
 app.use("/auth", AuthRouter);
+app.use("/appointments", AppointmentsRouter);
 app.use("/specialization", SpecializationRouter);
 
 // Error handlers

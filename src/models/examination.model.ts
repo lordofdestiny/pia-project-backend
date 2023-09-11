@@ -8,7 +8,7 @@ export enum ExaminationStatus {
 }
 
 export type IExamination = {
-    id: string;
+    id: string | Types.ObjectId;
     specialization: Types.ObjectId;
     name: string;
     duration: number;
@@ -38,6 +38,7 @@ export const ExaminationSchema = new Schema<IExamination>(
         },
         status: {
             type: String,
+            trim: true,
             required: true,
             enum: Object.values(ExaminationStatus),
             default: ExaminationStatus.ACTIVE,

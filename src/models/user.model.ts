@@ -168,6 +168,7 @@ async function digestAndBcryptPassword(password: string, salt: string, algorithm
 }
 
 UserSchema.virtual("relative_profile_picture").get(function (this: IUser) {
+    if (!this.profile_picture) return null;
     return relativizePicturePath(this.profile_picture);
 });
 

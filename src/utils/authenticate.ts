@@ -40,6 +40,21 @@ export class Authenticator {
                 message: "incorrect password",
             });
         }
+        if (user.type === "patient") {
+            await user.populate({
+                path: "appointments",
+                populate: [
+                    {
+                        path: "examination",
+                        select: "name",
+                    },
+                    {
+                        path: "doctor",
+                        select: "first_name last_name branch",
+                    },
+                ],
+            });
+        }
         if (user?.type === "doctor") {
             await user.populate({
                 path: "specialization",
@@ -55,6 +70,18 @@ export class Authenticator {
                 match: {
                     status: "active",
                 },
+            });
+            await user.populate({
+                path: "appointments",
+                populate: [
+                    {
+                        path: "examination",
+                    },
+                    {
+                        path: "patient",
+                        select: "-password -salt",
+                    },
+                ],
             });
         }
         return done(null, user!.toObject({ virtuals: true }));

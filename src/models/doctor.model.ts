@@ -1,12 +1,15 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import { ISpecialization } from "./specialization.model";
+import { IExamination } from "./examination.model";
+import { IAppointment } from "./appointment.model";
 
 export interface IDoctor extends IUser {
     licence_number: string;
     specialization: ISpecialization;
-    examinations: string[];
     branch: string;
+    examinations: string[] | IExamination[];
+    appointments: string[] | IAppointment[];
     vacations: {
         start_date: Date;
         end_date: Date;
@@ -37,6 +40,12 @@ const DoctorSchema = new Schema<IDoctor, TDoctorModel, IDoctorMethods>(
             {
                 type: Schema.Types.ObjectId,
                 ref: "Examination",
+            },
+        ],
+        appointments: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Appointment",
             },
         ],
         vacations: [

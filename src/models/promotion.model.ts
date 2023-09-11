@@ -7,9 +7,19 @@ export interface IPatientNotification {
 }
 
 const PromotionSchema = new Schema<IPatientNotification>({
-    message: String,
-    start: Date,
-    end: Date,
+    message: {
+        type: String,
+        trim: true,
+        required: [true, "Message is required"],
+    },
+    start: {
+        type: Date,
+        required: [true, "Start date is required"],
+    },
+    end: {
+        type: Date,
+        required: [true, "End date is required"],
+    },
 });
 
 export const PromotionModel = model("Promotions", PromotionSchema, "promotions");

@@ -1,13 +1,13 @@
 import { Router } from "express";
-import PatientRouter from "@routes/patient.routes";
-import DoctorRouter from "@routes/doctor.routes";
-import ManagerRouter from "@routes/manager.routes";
+import { PatientRouter } from "@routes/patient.routes";
+import { DoctorRouter } from "@routes/doctor.routes";
+import { ManagerRouter } from "@routes/manager.routes";
 import { EUserRole } from "@models/user.model";
 import { upload } from "@utils/upload";
 import { Authenticator } from "@utils/authenticate";
 import UserController from "@controllers/user.controller";
 
-const UserRouter = Router();
+export const UserRouter = Router();
 
 // Import routers
 UserRouter.use("/patients", PatientRouter);
@@ -38,5 +38,3 @@ UserRouter.delete(
     Authenticator.authenticate([EUserRole.PATIENT, EUserRole.DOCTOR, EUserRole.MANAGER]),
     UserController.delete_avatar
 );
-
-export default UserRouter;

@@ -1,6 +1,7 @@
 import { Schema, Model } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import { IPatientNotification } from "./promotion.model";
+import { IAppointment } from "./appointment.model";
 
 export enum EPatientStatus {
     CREATED = "created",
@@ -11,6 +12,7 @@ export enum EPatientStatus {
 export interface IPatient extends IUser {
     status: EPatientStatus;
     notifications: { notification: IPatientNotification; seen: boolean }[];
+    appointments: IAppointment[];
 }
 
 interface IPatientMethods extends IUserMethods {}
@@ -21,6 +23,7 @@ const ParientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
     {
         status: {
             type: String,
+            trim: true,
             required: true,
             default: EPatientStatus.CREATED,
             enum: Object.values(EPatientStatus),
@@ -29,12 +32,18 @@ const ParientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
             {
                 notification: {
                     type: Schema.Types.ObjectId,
-                    ref: "Notification",
+                    ref: "Promotions",
                 },
                 seen: {
                     type: Boolean,
                     default: false,
                 },
+            },
+        ],
+        appointments: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Appointment",
             },
         ],
     },
