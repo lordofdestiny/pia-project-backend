@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Hello world!</title>
+    <style>
+        li {
+            font-size: 2rem;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 4rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="title">Report(s)</h1>
+    <ul>
+        {{#each reports}}
+        <li style="margin-bottom: 1rem;"> Report
+            <ul class="report">
+                <li>
+                    Date and time: {{this.date}} at {{this.time}}
+                </li>
+                <li>Doctor: {{this.doctor}} - {{this.specialization}}</li>
+                <li>
+                    Visited for: {{this.reason}}
+                </li>
+                <li>
+                    Diagnosis: {{this.diagnosis}}
+                </li>
+                <li>
+                    Prescribe therapy: {{this.therapy}}
+                </li>
+                <li>
+                    Followup date: {{this.followup}}</span>
+                </li>
+            </ul>
+        </li>
+        {{/each}}
+    </ul>
+</body>
+
+</html>

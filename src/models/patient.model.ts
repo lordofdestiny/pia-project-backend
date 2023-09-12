@@ -1,4 +1,4 @@
-import { Schema, Model } from "mongoose";
+import { Schema, Model, Types } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
 import { IPatientNotification } from "./promotion.model";
 import { IAppointment } from "./appointment.model";
@@ -12,7 +12,7 @@ export enum EPatientStatus {
 export interface IPatient extends IUser {
     status: EPatientStatus;
     notifications: { notification: IPatientNotification; seen: boolean }[];
-    appointments: IAppointment[];
+    appointments: Types.ObjectId[] | IAppointment[];
 }
 
 interface IPatientMethods extends IUserMethods {}

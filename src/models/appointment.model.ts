@@ -11,11 +11,15 @@ export type IAppointmentReport = {
     followup: Date;
 };
 
-export enum EAppointmentStatus {
-    UPCOMING = "upcoming",
-    CANCELLED = "cancelled",
-    COMPLETED = "completed",
-}
+type ReportPath =
+    | {
+          generated: false;
+          path: null;
+      }
+    | {
+          generated: true;
+          path: string;
+      };
 
 export type IAppointment = {
     id: string;
@@ -23,9 +27,8 @@ export type IAppointment = {
     patient: Types.ObjectId | IPatient;
     examination: Types.ObjectId | IExamination;
     datetime: Date;
-    status: EAppointmentStatus;
-    cancelled_explanation?: string;
     report: IAppointmentReport | null;
+    reportPath: ReportPath;
 };
 
 export const AppointmentSchema = new Schema<IAppointment>(
@@ -49,14 +52,6 @@ export const AppointmentSchema = new Schema<IAppointment>(
             type: Date,
             required: [true, "Date and time is required"],
         },
-        status: {
-            type: String,
-            trim: true,
-            required: true,
-            enum: Object.values(EAppointmentStatus),
-            default: EAppointmentStatus.UPCOMING,
-        },
-        cancelled_explanation: String,
         report: {
             type: {
                 reason: {
@@ -80,6 +75,19 @@ export const AppointmentSchema = new Schema<IAppointment>(
                 },
             },
             default: null,
+        },
+        reportPath: {
+            type: {
+                generated: {
+                    type: Boolean,
+                    default: false,
+                },
+                path: {
+                    type: String,
+                    default: null,
+                },
+            },
+            required: false,
         },
     },
     {
