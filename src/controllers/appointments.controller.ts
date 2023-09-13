@@ -14,6 +14,7 @@ import { AppointmentModel, IAppointment } from "@models/appointment.model";
 import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { IExamination } from "@models/examination.model";
 import { IPatient, PatientModel } from "@models/patient.model";
+import { NotificationModel } from "@models/notification.model";
 
 export class AppointmentsController {
     public static async get_patient_appointments(
@@ -32,6 +33,7 @@ export class AppointmentsController {
             const appointments = await AppointmentModel.find({
                 patient: new Types.ObjectId(request.params.id),
             })
+                .select("-reportPath")
                 .populate({
                     path: "doctor",
                     select: "first_name last_name branch specialization",
@@ -67,9 +69,10 @@ export class AppointmentsController {
             const appointments = await AppointmentModel.find({
                 doctor: new Types.ObjectId(request.params.id),
             })
+                .select("-reportPath")
                 .populate({
                     path: "patient",
-                    select: "first_name last_name",
+                    select: "id first_name last_name username email",
                 })
                 .populate({
                     path: "examination",
@@ -256,7 +259,10 @@ export class AppointmentsController {
                 path: "examination",
                 select: "name",
             });
-            return response.status(201).json(appointment.toObject({ virtuals: true }));
+            return response.status(201).json({
+                ...appointment.toObject({ virtuals: true }),
+                reportPath: undefined,
+            });
         } catch (error) {
             next(error);
         }
@@ -301,6 +307,66 @@ export class AppointmentsController {
                 appointment.remove(),
             ]);
 
+            response.sendStatus(204);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public static async cancel_as_doctor(
+        request: Request<
+            {
+                appointmentId: string;
+            },
+            {},
+            {
+                reason: string;
+            }
+        >,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { appointmentId: id } = request.params;
+        const { reason } = request.body;
+        if (!ObjectId.isValid(id)) {
+            return response.status(400).json({
+                message: "Invalid id",
+            });
+        }
+        try {
+            const appointment = await AppointmentModel.findById(id);
+            if (!appointment) {
+                return response.status(404).json({
+                    message: "Appointment not found",
+                });
+            }
+            const { doctor: doctorId, patient: patientId } = appointment as {
+                doctor: ObjectId;
+                patient: ObjectId;
+            };
+            const notification = await NotificationModel.create({
+                message: reason,
+                type: "cancelation",
+            });
+            const result = await Promise.all([
+                DoctorModel.findByIdAndUpdate(doctorId, {
+                    $pull: {
+                        appointments: new Types.ObjectId(id),
+                    },
+                }).exec(),
+                PatientModel.findByIdAndUpdate(patientId, {
+                    $pull: {
+                        appointments: new Types.ObjectId(id),
+                    },
+                    $push: {
+                        notifications: {
+                            notification: notification._id,
+                            seen: false,
+                        },
+                    },
+                }).exec(),
+                appointment.remove(),
+            ]);
             response.sendStatus(204);
         } catch (error) {
             next(error);
@@ -412,6 +478,125 @@ export class AppointmentsController {
             await sendByEmail((<IPatient>appointment.patient).email, appointment.reportPath.path);
 
             return response.sendStatus(200);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public static async get_past_appointments(
+        request: Request<{
+            id: string;
+        }>,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { id: patientId } = request.params;
+        if (!ObjectId.isValid(patientId)) {
+            return response.status(400).json({
+                message: "Invalid id",
+            });
+        }
+        try {
+            const patient = await PatientModel.findById(patientId, {
+                appointments: 1,
+                first_name: 1,
+                last_name: 1,
+                username: 1,
+                email: 1,
+            })
+                .populate({
+                    path: "appointments",
+                    match: {
+                        datetime: {
+                            $lte: new Date(),
+                        },
+                    },
+                    populate: [
+                        {
+                            path: "doctor",
+                            select: "first_name last_name branch specialization",
+                            populate: {
+                                path: "specialization",
+                                select: "name",
+                            },
+                        },
+                        {
+                            path: "examination",
+                            select: "name duration",
+                        },
+                    ],
+                })
+                .lean({ virtuals: true });
+
+            response.json(patient);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public static async post_report(
+        request: Request<
+            {
+                id: string;
+            },
+            {},
+            {
+                reason: string;
+                diagnosis: string;
+                therapy: string;
+                followup: string;
+            }
+        >,
+        response: Response,
+        next: NextFunction
+    ) {
+        const { id } = request.params;
+        if (!ObjectId.isValid(id)) {
+            return response.status(400).json({
+                message: "Invalid id",
+            });
+        }
+        const { reason, diagnosis, therapy, followup } = request.body;
+        if (!reason || !diagnosis || !therapy || !followup) {
+            return response.status(400).json({
+                message: "Missing parameters",
+            });
+        }
+        const followupDate = DateTime.fromISO(followup).toJSDate();
+        if (followupDate < new Date()) {
+            return response.status(400).json({
+                message: "Followup date must be in the future",
+            });
+        }
+        try {
+            const appointment = await AppointmentModel.findById(id)
+                .select("-reportPath")
+                .populate({
+                    path: "patient",
+                    select: "id first_name last_name username email",
+                })
+                .populate({
+                    path: "examination",
+                });
+            if (!appointment) {
+                return response.status(404).json({
+                    message: "Appointment not found",
+                });
+            }
+            appointment.report = {
+                reason,
+                diagnosis,
+                therapy,
+                followup: followupDate,
+            };
+            await appointment.save({
+                validateModifiedOnly: true,
+            });
+            const data = {
+                ...appointment.toObject({ virtuals: true }),
+                reportPath: undefined,
+            };
+            response.status(200).json(data);
         } catch (error) {
             next(error);
         }

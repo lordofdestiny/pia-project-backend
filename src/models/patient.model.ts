@@ -1,6 +1,6 @@
 import { Schema, Model, Types } from "mongoose";
 import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
-import { IPatientNotification } from "./promotion.model";
+import { TPatientNotification } from "./notification.model";
 import { IAppointment } from "./appointment.model";
 
 export enum EPatientStatus {
@@ -11,7 +11,7 @@ export enum EPatientStatus {
 
 export interface IPatient extends IUser {
     status: EPatientStatus;
-    notifications: { notification: IPatientNotification; seen: boolean }[];
+    notifications: { notification: TPatientNotification; seen: boolean }[];
     appointments: Types.ObjectId[] | IAppointment[];
 }
 
@@ -32,7 +32,7 @@ const ParientSchema = new Schema<IPatient, TPatientModel, IPatientMethods>(
             {
                 notification: {
                     type: Schema.Types.ObjectId,
-                    ref: "Promotions",
+                    ref: "Notifications",
                 },
                 seen: {
                     type: Boolean,

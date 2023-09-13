@@ -3,7 +3,7 @@ import { default_profile_picture } from "@utils/util";
 import { ManagerModel } from "@models/manager.model";
 import { PatientModel } from "@models/patient.model";
 import { DateTime } from "luxon";
-import { PromotionModel } from "@models/promotion.model";
+import { NotificationModel } from "@models/notification.model";
 
 export default class ManagerController {
     public static async register(request: Request, response: Response, next: NextFunction) {
@@ -21,7 +21,7 @@ export default class ManagerController {
 
     public static async get_promotions(request: Request, response: Response, next: NextFunction) {
         try {
-            const notifications = await PromotionModel.find({
+            const notifications = await NotificationModel.find({
                 end: { $gte: new Date() },
             }).lean({ virtuals: true });
             response.status(200).json(notifications);
@@ -37,6 +37,7 @@ export default class ManagerController {
                 message: string;
                 start: string;
                 end: string;
+                type: "promotion";
             }
         >,
         response: Response,
@@ -48,7 +49,7 @@ export default class ManagerController {
         }
 
         try {
-            const notification = await PromotionModel.create({
+            const notification = await NotificationModel.create({
                 message: message.trim(),
                 start: DateTime.fromISO(start).startOf("day").toJSDate(),
                 end: DateTime.fromISO(end).endOf("day").toJSDate(),
