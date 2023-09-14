@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { PatientModel, IPatient } from "@models/patient.model";
 import { default_profile_picture } from "@utils/util";
+import { ObjectId } from "mongodb";
 
 export default class PatientController {
     public static async register(
@@ -48,5 +49,44 @@ export default class PatientController {
         } catch (err) {
             next(err);
         }
+    }
+
+    public static async get_notifications(
+        request: Request<{ id: string }>,
+        response: Response,
+        next: NextFunction
+    ) {
+        try {
+            const { id } = request.params;
+            const patient = await PatientModel.findById(id, {
+                notifications: 1,
+            })
+                .populate({
+                    path: "notifications.notification",
+                })
+                .lean({ virtuals: true });
+            response.status(200).json(patient?.notifications ?? []);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    public static async mark_as_seen(
+        request: Request<{ id: string }>,
+        response: Response,
+        next: NextFunction
+    ) {
+        try {
+            const { id } = request.params;
+            if (!ObjectId.isValid(id)) {
+                return response.status(400).json({ message: "invalid id" });
+            }
+            const patient = await PatientModel.findByIdAndUpdate(id, {
+                $set: {
+                    "notifications.$[].seen": true,
+                },
+            });
+            response.sendStatus(204);
+        } catch (err) {}
     }
 }

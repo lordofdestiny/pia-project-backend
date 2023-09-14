@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
 import { DoctorModel, IDoctor } from "@models/doctor.model";
-import { default_profile_picture, resolvePicturePath } from "@utils/util";
+import { default_profile_picture } from "@utils/util";
 import { SpecializationModel } from "@models/specialization.model";
 import { DateTime } from "luxon";
 

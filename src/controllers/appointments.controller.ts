@@ -243,22 +243,36 @@ export class AppointmentsController {
                 examination: examinationId,
                 datetime,
             });
+            const notification = await NotificationModel.create({
+                message: `You have an appointment with ${doctor.first_name} ${
+                    doctor.last_name
+                } tomorrow at ${DateTime.fromJSDate(datetime).toFormat("HH:mm")}`,
+                date: DateTime.fromJSDate(datetime).minus({ days: 1 }).toJSDate(),
+                appointment: appointment.id,
+                type: "appointment",
+            });
             doctor.appointments.push(appointment.id);
-            await doctor.save({
-                validateModifiedOnly: true,
-            });
             patient.appointments.push(appointment.id);
-            await patient.save({
-                validateModifiedOnly: true,
+            patient.notifications.push({
+                notification: notification.id,
+                seen: false,
             });
-            await AppointmentModel.populate(appointment, {
-                path: "doctor",
-                select: "branch first_name last_name",
-            });
-            await AppointmentModel.populate(appointment, {
-                path: "examination",
-                select: "name",
-            });
+            await Promise.all([
+                doctor.save({
+                    validateModifiedOnly: true,
+                }),
+                patient.save({
+                    validateModifiedOnly: true,
+                }),
+                AppointmentModel.populate(appointment, {
+                    path: "doctor",
+                    select: "branch first_name last_name",
+                }),
+                AppointmentModel.populate(appointment, {
+                    path: "examination",
+                    select: "name",
+                }),
+            ]);
             return response.status(201).json({
                 ...appointment.toObject({ virtuals: true }),
                 reportPath: undefined,
@@ -334,7 +348,10 @@ export class AppointmentsController {
             });
         }
         try {
-            const appointment = await AppointmentModel.findById(id);
+            const appointment = await AppointmentModel.findById(id).populate(
+                "doctor",
+                "first_name last_name"
+            );
             if (!appointment) {
                 return response.status(404).json({
                     message: "Appointment not found",
@@ -344,14 +361,26 @@ export class AppointmentsController {
                 doctor: ObjectId;
                 patient: ObjectId;
             };
-            const notification = await NotificationModel.create({
-                message: reason,
-                type: "cancelation",
+            const doctor = appointment.doctor as IDoctor;
+            const doctor_name = `${doctor.first_name} ${doctor.last_name}`;
+            const cancelNotification = await NotificationModel.create({
+                message: `Appointment cancelled by ${doctor_name}: ${reason}`,
+                type: "cancellation",
             });
-            const result = await Promise.all([
+            const appointmentNotification = await NotificationModel.findOne({
+                appointment: new Types.ObjectId(id),
+            });
+            await Promise.all([
                 DoctorModel.findByIdAndUpdate(doctorId, {
                     $pull: {
                         appointments: new Types.ObjectId(id),
+                    },
+                }).exec(),
+                PatientModel.findByIdAndUpdate(patientId, {
+                    $pull: {
+                        notifications: {
+                            notification: new Types.ObjectId(appointmentNotification!.id),
+                        },
                     },
                 }).exec(),
                 PatientModel.findByIdAndUpdate(patientId, {
@@ -360,13 +389,14 @@ export class AppointmentsController {
                     },
                     $push: {
                         notifications: {
-                            notification: notification._id,
+                            notification: cancelNotification._id,
                             seen: false,
                         },
                     },
                 }).exec(),
                 appointment.remove(),
             ]);
+            await appointmentNotification!.remove();
             response.sendStatus(204);
         } catch (error) {
             next(error);

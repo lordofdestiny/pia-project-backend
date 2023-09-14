@@ -40,7 +40,11 @@ export class Authenticator {
                 message: "incorrect password",
             });
         }
-
+        if (user.type === "patient") {
+            await user.populate({
+                path: "notifications.notification",
+            });
+        }
         if (user?.type === "doctor") {
             await user.populate({
                 path: "specialization",

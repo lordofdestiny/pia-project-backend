@@ -53,6 +53,7 @@ export default class ManagerController {
                 message: message.trim(),
                 start: DateTime.fromISO(start).startOf("day").toJSDate(),
                 end: DateTime.fromISO(end).endOf("day").toJSDate(),
+                type: "promotion",
             });
 
             await PatientModel.updateMany(

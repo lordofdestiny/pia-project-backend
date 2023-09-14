@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
+import { AppointmentSchema, IAppointment } from "./appointment.model";
 
 export type TPatientNotification = {
     message: string;
@@ -10,7 +11,11 @@ export type TPatientNotification = {
           type: "promotion";
       }
     | {
-          type: "cancelation";
+          type: "cancellation";
+      }
+    | {
+          appointment: Types.ObjectId | IAppointment;
+          type: "appointment";
       }
 );
 
@@ -30,9 +35,13 @@ const NotificationSchema = new Schema<TPatientNotification>({
     end: {
         type: Date,
     },
+    appointment: {
+        type: Types.ObjectId,
+        ref: "Appointments",
+    },
     type: {
         type: String,
-        enum: ["promotion", "cancelation"],
+        enum: ["promotion", "cancellation", "appointment"],
         required: [true, "Type is required"],
     },
 });
