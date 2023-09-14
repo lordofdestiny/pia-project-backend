@@ -6,7 +6,6 @@ import { upload } from "@utils/upload";
 
 export const DoctorRouter = Router();
 DoctorRouter.post(
-    // ? Maybe can be removed
     "/",
     Authenticator.authenticate([EUserRole.MANAGER]),
     upload.single("profile_picture"),

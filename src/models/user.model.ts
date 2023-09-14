@@ -2,7 +2,6 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import mongooseLeanVirtuals from "mongoose-lean-virtuals";
 
-import { relativizePicturePath } from "@utils/util";
 import { Schema, Model, model, CallbackError, HydratedDocument } from "mongoose";
 
 export enum EUserRole {
@@ -21,7 +20,6 @@ export interface SessionUser {
     phone: string;
     address: string;
     profile_picture: string;
-    relative_profile_picture: string;
     type: Exclude<EUserRole, EUserRole.USER>;
 }
 
@@ -56,11 +54,7 @@ export interface IUserMethods {
     comparePassword: (password: string) => Promise<boolean>;
 }
 
-export interface IUserVirtuals {
-    get relative_profile_picture(): string;
-}
-
-type TUserModel = Model<IUser, {}, IUserMethods, IUserVirtuals>;
+type TUserModel = Model<IUser, {}, IUserMethods>;
 
 const UserSchema = new Schema<IUser, TUserModel, IUserMethods>(
     {
@@ -166,11 +160,6 @@ async function digestAndBcryptPassword(password: string, salt: string, algorithm
     const digest = digestPassword(password, salt, algorithm);
     return bcrypt.hash(digest, salt);
 }
-
-UserSchema.virtual("relative_profile_picture").get(function (this: IUser) {
-    if (!this.profile_picture) return null;
-    return relativizePicturePath(this.profile_picture);
-});
 
 UserSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next();

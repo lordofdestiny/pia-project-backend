@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { PatientModel, IPatient } from "@models/patient.model";
-import { default_profile_picture } from "@utils/util";
+import { default_profile_picture, relativizePicturePath } from "@utils/util";
 import { ObjectId } from "mongodb";
 
 export default class PatientController {
@@ -16,15 +16,11 @@ export default class PatientController {
             return response.status(400).json({ message: "file that was send was not an image" });
         }
         const { body: data } = request;
-        const profile_picture = request.file?.path ?? default_profile_picture;
+        const profile_picture =
+            relativizePicturePath(request.file?.path) ?? default_profile_picture;
         try {
             const user = await PatientModel.create({ ...data, profile_picture });
-            const userObj = user.toObject();
-            Object.assign(userObj, {
-                profile_picture: userObj.relative_profile_picture,
-                relative_profile_picture: undefined,
-            });
-            response.status(201).json(userObj);
+            response.status(201).json(user.toObject());
         } catch (err) {
             next(err);
         }
@@ -40,12 +36,7 @@ export default class PatientController {
                     __v: 0,
                 }
             ).lean({ virtuals: true });
-            const resolved_patients = patients.map((patient) => {
-                patient.profile_picture = patient.relative_profile_picture;
-                (<any>patient).relative_profile_picture = undefined;
-                return patient;
-            });
-            response.status(200).json(resolved_patients);
+            response.status(200).json(patients);
         } catch (err) {
             next(err);
         }

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 
 import { DoctorModel, IDoctor } from "@models/doctor.model";
-import { default_profile_picture } from "@utils/util";
+import { default_profile_picture, relativizePicturePath } from "@utils/util";
 import { SpecializationModel } from "@models/specialization.model";
 import { DateTime } from "luxon";
 
@@ -16,8 +16,8 @@ export default class DoctorController {
             return response.status(400).json({ message: "file that was send was not an image" });
         }
         const { body: data } = request;
-        const profile_picture = request.file?.path ?? default_profile_picture;
-
+        const profile_picture =
+            relativizePicturePath(request.file?.path) ?? default_profile_picture;
         try {
             const specialization = await SpecializationModel.findById(data.specialization);
             if (specialization == null) {
@@ -27,12 +27,7 @@ export default class DoctorController {
             const doctor = await DoctorModel.populate(user, {
                 path: "specialization",
             });
-            response.status(201).json(
-                Object.assign(doctor.toObject({ virtuals: true }), {
-                    profile_picture: doctor.relative_profile_picture,
-                    relative_profile_picture: undefined,
-                })
-            );
+            response.status(201).json(doctor.toObject({ virtuals: true }));
         } catch (err) {
             next(err);
         }
@@ -77,12 +72,6 @@ export default class DoctorController {
                     },
                 })
                 .lean({ virtuals: true });
-            doctors.forEach((doctor) => {
-                Object.assign(doctor, {
-                    profile_picture: doctor.relative_profile_picture,
-                    relative_profile_picture: undefined,
-                });
-            });
             return response.status(200).json(doctors);
         } catch (err) {
             next(err);

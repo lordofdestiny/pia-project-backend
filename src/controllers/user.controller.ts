@@ -1,12 +1,13 @@
 import { unlink } from "fs/promises";
 import { Request, Response, NextFunction } from "express";
 import { EUserRole, UserModel } from "@models/user.model";
-import { relativizePicturePath } from "@utils/util";
+import { relativizePicturePath, resolvePicturePath } from "@utils/util";
 import { default_profile_picture } from "@utils/util";
 import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { IManager, ManagerModel } from "@models/manager.model";
 import { IPatient, PatientModel } from "@models/patient.model";
 import { Query } from "mongoose";
+import { resolve } from "path";
 
 export default class UserController {
     public static async update_profile(
@@ -47,12 +48,7 @@ export default class UserController {
                 ? UserController.updateDoctorProfile(...args)
                 : UserController.updateManagerProfile(...args)
             ).lean({ virtuals: true });
-            return response.status(200).json(
-                Object.assign(user as any, {
-                    profile_picture: user?.relative_profile_picture,
-                    relative_profile_picture: undefined,
-                })
-            );
+            return response.status(200).json(user);
         } catch (error) {
             next(error);
         }
@@ -115,7 +111,8 @@ export default class UserController {
                     .json({ message: "file that was send was not an image" });
             }
         }
-        UserController.impl_update_profile_picture(request.file!.path, request, response, next);
+        const relative_path = relativizePicturePath(request.file!.path);
+        UserController.impl_update_profile_picture(relative_path, request, response, next);
     }
 
     public static async delete_avatar(
@@ -148,11 +145,9 @@ export default class UserController {
             user!.profile_picture = profile_picture;
             await user!.save({ validateModifiedOnly: true });
             if (old_profile_picture !== default_profile_picture) {
-                await unlink(old_profile_picture);
+                await unlink(resolvePicturePath(old_profile_picture)!);
             }
-            return response
-                .status(200)
-                .json({ profile_picture: relativizePicturePath(profile_picture) });
+            return response.status(200).json({ profile_picture });
         } catch (err) {
             next(err);
         }
@@ -169,7 +164,7 @@ export default class UserController {
             const old_profile_picture = user!.profile_picture;
             await user!.delete();
             if (old_profile_picture !== default_profile_picture) {
-                await unlink(old_profile_picture);
+                await unlink(resolvePicturePath(old_profile_picture)!);
             }
             return response.status(200).json({ message: "user deleted" });
         } catch (err) {

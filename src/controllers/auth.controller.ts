@@ -26,8 +26,6 @@ export default class AuthController {
             }
             request.logIn(user, (err) => {
                 if (err) return next(err);
-                user.profile_picture = user.relative_profile_picture;
-                user.relative_profile_picture = undefined;
                 response.status(200).json({ message: "logged in", user });
             });
         })(request, response, next);
