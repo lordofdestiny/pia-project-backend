@@ -53,7 +53,10 @@ export default class PatientController {
                 notifications: 1,
             })
                 .populate({
-                    path: "notifications.notification",
+                    path: "notifications",
+                    populate: {
+                        path: "notification",
+                    },
                 })
                 .lean({ virtuals: true });
             response.status(200).json(patient?.notifications ?? []);
@@ -72,12 +75,27 @@ export default class PatientController {
             if (!ObjectId.isValid(id)) {
                 return response.status(400).json({ message: "invalid id" });
             }
-            const patient = await PatientModel.findByIdAndUpdate(id, {
-                $set: {
-                    "notifications.$[].seen": true,
+            const patient = await PatientModel.findById(id).populate({
+                path: "notifications",
+                populate: {
+                    path: "notification",
                 },
             });
-            response.sendStatus(204);
-        } catch (err) {}
+            if (!patient) {
+                return response.status(404).json({ message: "patient not found" });
+            }
+            patient.notifications.forEach((notification) => {
+                if (notification.notification.date.getTime() <= Date.now() && !notification.seen) {
+                    notification.seen = true;
+                }
+            });
+            await patient.save({
+                validateModifiedOnly: true,
+                validateBeforeSave: false,
+            });
+            response.status(200).json(patient.notifications);
+        } catch (err) {
+            next(err);
+        }
     }
 }

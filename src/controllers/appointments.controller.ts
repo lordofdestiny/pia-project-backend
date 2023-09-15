@@ -99,6 +99,7 @@ export class AppointmentsController {
         next: NextFunction
     ) {
         const { doctorId, patientId, examinationId, datetime } = request.body;
+        console.log(doctorId, patientId, examinationId, datetime);
         if (!doctorId || !patientId || !examinationId || !datetime) {
             return response.status(400).json({
                 message: "Missing parameters",
@@ -111,6 +112,16 @@ export class AppointmentsController {
         ) {
             return response.status(400).json({
                 message: "Invalid parameters",
+            });
+        }
+        if (DateTime.fromISO(datetime).toJSDate() < new Date()) {
+            return response.status(400).json({
+                message: "Date must be in the future",
+            });
+        }
+        if (DateTime.fromISO(datetime).hour < 7 || DateTime.fromISO(datetime).hour > 23) {
+            return response.status(400).json({
+                message: "Date must be between 7:00 and 23:00",
             });
         }
         try {
@@ -177,9 +188,9 @@ export class AppointmentsController {
                 });
 
             // First appointment before the requested one
-            const first_before = appointments.find(
-                ({ datetime }) => DateTime.fromJSDate(datetime) <= new_start
-            );
+            const first_before = appointments
+                .filter(({ datetime }) => DateTime.fromJSDate(datetime) <= new_start)
+                .at(-1);
             const first_after = appointments.find(
                 ({ datetime }) => DateTime.fromJSDate(datetime) >= new_start
             );
@@ -270,7 +281,6 @@ export class AppointmentsController {
                 }),
                 AppointmentModel.populate(appointment, {
                     path: "examination",
-                    select: "name",
                 }),
             ]);
             return response.status(201).json({

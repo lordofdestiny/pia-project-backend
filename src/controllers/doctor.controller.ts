@@ -66,6 +66,16 @@ export default class DoctorController {
                     },
                 })
                 .populate({
+                    path: "appointments",
+                    select: "examination datetime",
+                    populate: {
+                        path: "examination",
+                        match: {
+                            status: "active",
+                        },
+                    },
+                })
+                .populate({
                     path: "examinations",
                     match: {
                         status: "active",

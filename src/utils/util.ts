@@ -10,5 +10,5 @@ export function relativizePicturePath(picture_path: string | null | undefined) {
 
 export function resolvePicturePath(picture_path: string | null | undefined) {
     if (picture_path == null) return null;
-    return path.resolve(process.cwd(), "public", picture_path.replace(/^\//, ""));
+    return path.resolve(process.cwd(), "public", picture_path.substring(1));
 }
