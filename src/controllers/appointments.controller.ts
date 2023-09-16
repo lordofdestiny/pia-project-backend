@@ -84,6 +84,13 @@ export class AppointmentsController {
         }
     }
 
+    private static appointmentEnd(appointment: IAppointment) {
+        console.log(appointment.examination);
+        return DateTime.fromJSDate(appointment.datetime).plus({
+            minute: (<IExamination>appointment.examination).duration,
+        });
+    }
+
     public static async make(
         request: Request<
             {},
@@ -99,7 +106,6 @@ export class AppointmentsController {
         next: NextFunction
     ) {
         const { doctorId, patientId, examinationId, datetime } = request.body;
-        console.log(doctorId, patientId, examinationId, datetime);
         if (!doctorId || !patientId || !examinationId || !datetime) {
             return response.status(400).json({
                 message: "Missing parameters",
@@ -127,7 +133,12 @@ export class AppointmentsController {
         try {
             const doctor = await DoctorModel.findById(doctorId)
                 .populate("examinations")
-                .populate("appointments");
+                .populate({
+                    path: "appointments",
+                    populate: {
+                        path: "examination",
+                    },
+                });
             if (!doctor) {
                 return response.status(404).json({
                     message: "Doctor not found",
@@ -154,86 +165,86 @@ export class AppointmentsController {
             const new_start = DateTime.fromISO(datetime);
             const new_end = new_start.plus({ minutes: examination.duration });
 
+            const minTime = DateTime.fromJSDate(date).set({
+                hour: 7,
+                minute: 0,
+            });
+
+            const maxTime = DateTime.fromJSDate(date)
+                .set({
+                    hour: 23,
+                    minute: 0,
+                })
+                .minus({ minutes: examination.duration });
+
+            if (new_start < minTime || maxTime < new_end) {
+                return response.status(400).json({
+                    message: "Clinic is not open at that time!",
+                });
+            }
+
             // Check if the doctor is on vacation
             if (
                 doctorObj.vacations.some(
-                    ({ start_date, end_date }) => date >= start_date && date <= end_date
+                    ({ start_date, end_date }) =>
+                        date >= DateTime.fromJSDate(start_date).startOf("day").toJSDate() &&
+                        date <= DateTime.fromJSDate(end_date).endOf("day").toJSDate()
                 )
             ) {
+                return response.status(400).json({
+                    message: "Doctor is not available at that time!",
+                });
+            }
+
+            const day_appointments = (doctor.appointments as IAppointment[])
+                .filter(({ datetime }) => DateTime.fromJSDate(datetime).hasSame(new_start, "day"))
+                .sort(
+                    (a, b) =>
+                        DateTime.fromJSDate(a.datetime).diff(DateTime.fromJSDate(b.datetime))
+                            .milliseconds
+                );
+
+            // First appointment before the requested one
+            const first_before = day_appointments
+                .filter(({ datetime }) => DateTime.fromJSDate(datetime) <= new_start)
+                .at(-1);
+            const first_after = day_appointments.find(
+                ({ datetime }) => DateTime.fromJSDate(datetime) > new_start
+            );
+            const first_before_end = first_before
+                ? AppointmentsController.appointmentEnd(first_before)
+                : null;
+
+            let valid = false;
+            if (!first_before && !first_after) {
+                valid = true;
+            }
+            if (first_after && first_before) {
+                valid =
+                    new_start <= first_before_end! &&
+                    new_end <= DateTime.fromJSDate(first_after.datetime);
+            }
+            if (first_before && !first_after) {
+                valid = first_before_end! <= new_start;
+            }
+            if (!first_before && first_after) {
+                valid = new_end <= DateTime.fromJSDate(first_after.datetime);
+            }
+
+            if (!valid) {
                 return response.status(400).json({
                     message: "Doctor is not available at that time",
                 });
             }
 
-            const appointments = doctor.appointments as IAppointment[];
-
-            const day_appointments = appointments.filter(({ datetime }) =>
-                DateTime.fromJSDate(datetime).hasSame(new_start, "day")
+            return await AppointmentsController.handleMakeAppointment(
+                doctor,
+                patient,
+                examination.id as ObjectId,
+                date,
+                response,
+                next
             );
-
-            if (day_appointments.length === 0) {
-                return AppointmentsController.handleMakeAppointment(
-                    doctor,
-                    patient,
-                    examination.id as ObjectId,
-                    date,
-                    response,
-                    next
-                );
-            }
-
-            const getEnd = (appointment: IAppointment) =>
-                DateTime.fromJSDate(appointment.datetime).plus({
-                    minutes: (<IExamination>appointment.examination).duration,
-                });
-
-            // First appointment before the requested one
-            const first_before = appointments
-                .filter(({ datetime }) => DateTime.fromJSDate(datetime) <= new_start)
-                .at(-1);
-            const first_after = appointments.find(
-                ({ datetime }) => DateTime.fromJSDate(datetime) >= new_start
-            );
-
-            if (
-                first_after &&
-                first_before &&
-                getEnd(first_before) <= new_start &&
-                new_end <= getEnd(first_after)
-            ) {
-                return AppointmentsController.handleMakeAppointment(
-                    doctor,
-                    patient,
-                    examination.id as ObjectId,
-                    date,
-                    response,
-                    next
-                );
-            }
-            if (!first_before && first_after && new_end <= getEnd(first_after)) {
-                return AppointmentsController.handleMakeAppointment(
-                    doctor,
-                    patient,
-                    examination.id as ObjectId,
-                    date,
-                    response,
-                    next
-                );
-            }
-            if (first_before && !first_after && getEnd(first_before) <= new_start) {
-                return AppointmentsController.handleMakeAppointment(
-                    doctor,
-                    patient,
-                    examination.id as ObjectId,
-                    date,
-                    response,
-                    next
-                );
-            }
-
-            return response.status(400).json({
-                message: "Doctor is not available at that time",
-            });
         } catch (error) {
             next(error);
         }
