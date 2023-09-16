@@ -9,9 +9,6 @@ export default class PatientController {
         response: Response,
         next: NextFunction
     ) {
-        if (request.isAuthenticated()) {
-            return response.status(409).json({ message: "already logged in" });
-        }
         if (request.file === undefined && (request.file_not_image ?? false)) {
             return response.status(400).json({ message: "file that was send was not an image" });
         }

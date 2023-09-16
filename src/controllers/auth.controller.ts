@@ -19,10 +19,10 @@ export default class AuthController {
         return passport.authenticate(strategy, (err, user, info) => {
             if (err) return next(err);
             if (!user) {
-                return response.status(401).jsonp(info);
+                return response.status(401).json(info);
             }
             if (request.isAuthenticated?.()) {
-                return response.status(409).jsonp({ message: "already logged in" });
+                return response.status(409).json({ message: "already logged in" });
             }
             request.logIn(user, (err) => {
                 if (err) return next(err);
@@ -78,7 +78,7 @@ export default class AuthController {
                 return response.status(404).json({ message: "user not found" });
             }
             if (!(await user!.comparePassword(old_password))) {
-                return response.status(409).json({ message: "old password incorrect" });
+                return response.status(403).json({ message: "old password incorrect" });
             }
             user!.password = new_password;
             await user!.save({ validateModifiedOnly: true });
