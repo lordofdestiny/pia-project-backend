@@ -1,13 +1,12 @@
-import os from "os";
-import path from "path";
+import os from "node:os";
+import path from "node:path";
 import QRCode from "qrcode";
 import { nanoid } from "nanoid";
 import { DateTime } from "luxon";
 import { ObjectId } from "mongodb";
 import nodemailer from "nodemailer";
-import previewEmail from "preview-email";
 import { Document, Types } from "mongoose";
-import { mkdir, readFile } from "fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { create as createPDF } from "pdf-creator-node";
 import { Request, Response, NextFunction } from "express";
 import { AppointmentModel, IAppointment } from "@models/appointment.model";
@@ -85,7 +84,6 @@ export class AppointmentsController {
     }
 
     private static appointmentEnd(appointment: IAppointment) {
-        console.log(appointment.examination);
         return DateTime.fromJSDate(appointment.datetime).plus({
             minute: (<IExamination>appointment.examination).duration,
         });
@@ -461,8 +459,6 @@ export class AppointmentsController {
                 return response.sendStatus(404);
             }
 
-            console.log(patient);
-
             const appointments = patient.appointments as IAppointment[];
             const reports = appointments.map((appointment) => prepareReport(appointment));
             const path = await generatePdf(reports);
@@ -745,8 +741,10 @@ async function sendByEmail(patientMail: string, pdfPath: string) {
         ],
     };
 
-    if (process.env.SHOW_MAIL_PREVIEW?.toLowerCase() === "yes") {
-        await previewEmail(
+    if (process.env.NODE_ENV === "development" &&
+        process.env.SHOW_MAIL_PREVIEW?.toLowerCase() === "yes") {
+        const previewEmail = await import("preview-email");
+        await previewEmail.default(
             JSON.parse(
                 (
                     await nodemailer

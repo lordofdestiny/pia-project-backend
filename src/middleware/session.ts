@@ -2,6 +2,7 @@ import MongoStore from "connect-mongo";
 import session from "express-session";
 import MongooseConnect from "@utils/mongoose-connect";
 
+
 export const Sessions = session({
     cookie: { maxAge: 60 * 60 * 1000, sameSite: "lax", secure: false, httpOnly: false },
     secret: process.env.SESSION_SECRET!,

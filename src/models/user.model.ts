@@ -183,7 +183,7 @@ UserSchema.set("toObject", {
 });
 
 UserSchema.method("comparePassword", async function (password: string) {
-    return bcrypt.compare(await digestPassword(password, this.salt), this.password!);
+    return bcrypt.compare(digestPassword(password, this.salt), this.password!);
 });
 
 UserSchema.plugin(mongooseLeanVirtuals);

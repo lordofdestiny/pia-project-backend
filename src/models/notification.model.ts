@@ -1,5 +1,5 @@
 import { Schema, Types, model } from "mongoose";
-import { AppointmentSchema, IAppointment } from "./appointment.model";
+import {  IAppointment } from "./appointment.model";
 
 export type TPatientNotification = {
     message: string;

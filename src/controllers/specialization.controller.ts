@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { MongooseError, Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import { SpecializationModel } from "@models/specialization.model";
@@ -195,9 +195,7 @@ export default class SpecializationController {
         next: NextFunction
     ) {
         const { id, status } = request.body;
-        console.log(status);
         if (!ObjectId.isValid(id) || typeof status !== "boolean") {
-            console.log(ObjectId.isValid(id), typeof status);
             return response.sendStatus(400);
         }
         try {

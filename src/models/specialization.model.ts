@@ -40,4 +40,3 @@ const SpecializationSchema = new Schema<
 SpecializationSchema.plugin(mongooseLeanVirtuals);
 
 export const SpecializationModel = model("Specialization", SpecializationSchema, "specializations");
-console.log("specialization.model.ts");

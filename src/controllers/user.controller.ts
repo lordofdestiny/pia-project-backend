@@ -1,4 +1,4 @@
-import { unlink } from "fs/promises";
+import { unlink } from "node:fs/promises";
 import { Request, Response, NextFunction } from "express";
 import { EUserRole, UserModel } from "@models/user.model";
 import { relativizePicturePath, resolvePicturePath } from "@utils/util";
@@ -7,7 +7,6 @@ import { DoctorModel, IDoctor } from "@models/doctor.model";
 import { IManager, ManagerModel } from "@models/manager.model";
 import { IPatient, PatientModel } from "@models/patient.model";
 import { Query } from "mongoose";
-import { resolve } from "path";
 
 export default class UserController {
     public static async update_profile(

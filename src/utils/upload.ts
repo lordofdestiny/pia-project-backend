@@ -1,8 +1,8 @@
-import { resolve } from "path";
-import { nanoid } from "nanoid";
-import { extension } from "mime-types";
-import multer, { diskStorage } from "multer";
-import { NextFunction, Request, Response } from "express";
+import {resolve} from "node:path";
+import {nanoid} from "nanoid";
+import {extension} from "mime-types";
+import multer, {diskStorage} from "multer";
+import {Request} from "express";
 
 const cwd = process.cwd();
 const path = resolve(cwd, "public", "uploads", "images", "profile");
@@ -32,4 +32,4 @@ export function imageFileFilter(request: Request, file: Express.Multer.File, cal
     callback(null, test);
 }
 
-export const upload = multer({ storage: storage, fileFilter: imageFileFilter });
+export const upload = multer({storage: storage, fileFilter: imageFileFilter});

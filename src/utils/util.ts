@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 
 export const default_profile_picture = "/resources/img/default.jpeg";
 

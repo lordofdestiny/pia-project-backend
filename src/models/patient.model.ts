@@ -1,7 +1,7 @@
-import { Schema, Model, Types } from "mongoose";
-import { UserModel, IUser, IUserMethods, EUserRole } from "@models/user.model";
-import { TPatientNotification } from "./notification.model";
-import { IAppointment } from "./appointment.model";
+import {Schema, Model, Types} from "mongoose";
+import {UserModel, IUser, IUserMethods, EUserRole} from "@models/user.model";
+import {TPatientNotification} from "./notification.model";
+import {IAppointment} from "./appointment.model";
 
 export enum EPatientStatus {
     CREATED = "created",
@@ -15,7 +15,8 @@ export interface IPatient extends IUser {
     appointments: Types.ObjectId[] | IAppointment[];
 }
 
-interface IPatientMethods extends IUserMethods {}
+interface IPatientMethods extends IUserMethods {
+}
 
 type TPatientModel = Model<IPatient, {}, IPatientMethods>;
 
