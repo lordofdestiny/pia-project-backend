@@ -1,36 +1,29 @@
-import { Request, Response, NextFunction } from "express";
-import { MongooseError, Types } from "mongoose";
-import { ObjectId } from "mongodb";
-import { SpecializationModel } from "@models/specialization.model";
-import { ExaminationModel, ExaminationStatus } from "@models/examination.model";
+import {Request, Response, NextFunction} from "express";
+import {MongooseError, Types} from "mongoose";
+import {ObjectId} from "mongodb";
+import {SpecializationModel} from "@models/specialization.model";
+import {ExaminationModel, ExaminationStatus} from "@models/examination.model";
 
 export default class SpecializationController {
     public static async get_specialization(
-        request: Request<
-            {},
-            {},
-            {},
-            {
-                id?: string;
-                name?: string;
-            }
-        >,
+        request: Request<{}, {}, {}, {
+            id?: string;
+            name?: string;
+        }>,
         response: Response,
         next: NextFunction
     ) {
-        const { id, name } = request.query as any;
+        const {id, name} = request.query as any;
         const query: any = {};
         if (id) {
             query._id = new Types.ObjectId(id);
         }
         if (name) {
-            query.name = { $regex: new RegExp(name, "i") };
+            query.name = {$regex: new RegExp(name, "i")};
         }
         try {
             const specialization = await SpecializationModel.aggregate([
-                {
-                    $match: query,
-                },
+                {$match: query},
                 {
                     $lookup: {
                         from: "examinations",
@@ -38,37 +31,15 @@ export default class SpecializationController {
                         foreignField: "_id",
                         as: "examinations",
                         pipeline: [
-                            {
-                                $match: {
-                                    status: "active",
-                                },
-                            },
-                            {
-                                $sort: {
-                                    name: 1,
-                                },
-                            },
-                            {
-                                $set: {
-                                    id: "$_id",
-                                },
-                            },
+                            {$match: {status: "active"}},
+                            {$sort: {name: 1}},
+                            {$set: {id: "$_id"}},
                         ],
                     },
                 },
-                {
-                    $set: {
-                        id: "$_id",
-                    },
-                },
-                {
-                    $unset: ["_id", "examinations._id"],
-                },
-                {
-                    $sort: {
-                        name: 1,
-                    },
-                },
+                {$set: {id: "$_id"}},
+                {$unset: ["_id", "examinations._id"]},
+                {$sort: {name: 1}},
             ]);
             if (!specialization) {
                 return response.sendStatus(404);
@@ -83,17 +54,13 @@ export default class SpecializationController {
     }
 
     public static async create(
-        request: Request<
-            any,
-            {},
-            {
-                name: string;
-            }
-        >,
+        request: Request<any, {}, {
+            name: string;
+        }>,
         Response: Response,
         next: NextFunction
     ) {
-        const { name } = request.body;
+        const {name} = request.body;
         try {
             if (!name) {
                 return Response.sendStatus(400);
@@ -118,39 +85,20 @@ export default class SpecializationController {
                         as: "examinations",
                     },
                 },
-                {
-                    $unwind: {
-                        path: "$examinations",
-                    },
-                },
-                {
-                    $match: {
-                        "examinations.status": "requested",
-                    },
-                },
+                {$unwind: {path: "$examinations"},},
+                {$match: {"examinations.status": "requested"}},
                 {
                     $replaceRoot: {
                         newRoot: {
                             $mergeObjects: [
                                 "$examinations",
-                                {
-                                    specialization: {
-                                        name: "$name",
-                                        id: "$_id",
-                                    },
-                                },
+                                {specialization: {name: "$name", id: "$_id"},},
                             ],
                         },
                     },
                 },
-                {
-                    $set: {
-                        id: "$_id",
-                    },
-                },
-                {
-                    $unset: ["_id", "__v"],
-                },
+                {$set: {id: "$_id"}},
+                {$unset: ["_id", "__v"]},
             ]);
             response.status(200).json(request);
         } catch (error) {
@@ -164,7 +112,7 @@ export default class SpecializationController {
         next: NextFunction
     ) {
         try {
-            const { specialization: specializationId } = request.body;
+            const {specialization: specializationId} = request.body;
             if (!ObjectId.isValid(specializationId)) {
                 return response.sendStatus(400);
             }
@@ -190,11 +138,11 @@ export default class SpecializationController {
     }
 
     public static async handle_request(
-        request: Request<{}, {}, { id: string; status: boolean }>,
+        request: Request<{}, {}, { id: string; status: any }>,
         response: Response,
         next: NextFunction
     ) {
-        const { id, status } = request.body;
+        const {id, status} = request.body;
         if (!ObjectId.isValid(id) || typeof status !== "boolean") {
             return response.sendStatus(400);
         }
@@ -213,12 +161,10 @@ export default class SpecializationController {
                     path: "specialization",
                     populate: {
                         path: "examinations",
-                        match: {
-                            status: "active",
-                        },
+                        match: {status: "active"},
                     },
                 });
-                response.status(200).json(examination.toObject({ virtuals: true }));
+                response.status(200).json(examination.toObject({virtuals: true}));
             } else {
                 await examination.deleteOne();
                 response.sendStatus(204);
@@ -229,20 +175,16 @@ export default class SpecializationController {
     }
 
     public static async add_examination(
-        request: Request<
-            {},
-            {},
-            {
-                specialization: string;
-                name: string;
-                price: number;
-                duration: number;
-            }
-        >,
+        request: Request<{}, {}, {
+            specialization: string;
+            name: string;
+            price: number;
+            duration: number;
+        }>,
         response: Response,
         next: NextFunction
     ) {
-        const { specialization: specializationId, name, price, duration } = request.body;
+        const {specialization: specializationId, name, price, duration} = request.body;
         if (!specializationId || !name || price == null) {
             return response.sendStatus(400);
         }
@@ -262,30 +204,24 @@ export default class SpecializationController {
             specialization.examinations.push(examination._id);
             await specialization.save();
 
-            response.status(201).json(examination.toObject({ virtuals: true }));
+            response.status(201).json(examination.toObject({virtuals: true}));
         } catch (error) {
             next(error);
         }
     }
 
     public static async update_examination(
-        request: Request<
-            {
-                id: string;
-            },
-            {},
-            {
-                specialization: string;
-                name: string;
-                price: number;
-                duration: number;
-            }
-        >,
+        request: Request<{ id: string; }, {}, {
+            specialization: string;
+            name: string;
+            price: number;
+            duration: number;
+        }>,
         response: Response,
         next: NextFunction
     ) {
-        const { id } = request.params;
-        const { specialization, name, price, duration } = request.body;
+        const {id} = request.params;
+        const {specialization, name, price, duration} = request.body;
         if (
             !ObjectId.isValid(id) ||
             !ObjectId.isValid(specialization) ||
@@ -297,19 +233,10 @@ export default class SpecializationController {
         }
         try {
             const examination = await ExaminationModel.findOneAndUpdate(
-                {
-                    _id: id,
-                    specialization: specialization,
-                },
-                {
-                    name,
-                    price,
-                    duration,
-                },
-                {
-                    new: true,
-                }
-            ).lean({ virtuals: true });
+                {_id: id, specialization: specialization},
+                {name, price, duration},
+                {new: true}
+            ).lean({virtuals: true});
             if (!examination) {
                 return response.sendStatus(404);
             }
@@ -320,13 +247,11 @@ export default class SpecializationController {
     }
 
     public static async delete_examination(
-        request: Request<{
-            id: string;
-        }>,
+        request: Request<{ id: string }>,
         response: Response,
         next: NextFunction
     ) {
-        const { id } = request.params;
+        const {id} = request.params;
         if (!ObjectId.isValid(id)) {
             return response.sendStatus(400);
         }

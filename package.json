@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "postbuild": "tsc-alias",
+    "postbuild": "tsc-alias && copyfiles -u 1 src/templates/*.html dist/",
     "start": "node dist/server.js",
     "dev": "node -r dotenv/config -r module-alias/register dist/server.js",
     "predev": "npm run build",
@@ -23,6 +23,7 @@
     "@utils": "dist/utils"
   },
   "devDependencies": {
+    "copyfiles": "^2.4.1",
     "dotenv": "^16.3.1",
     "module-alias": "^2.2.3",
     "nodemon": "^3.0.1",

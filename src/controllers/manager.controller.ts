@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from "express";
-import { default_profile_picture } from "@utils/util";
-import { ManagerModel } from "@models/manager.model";
-import { PatientModel } from "@models/patient.model";
-import { DateTime } from "luxon";
-import { NotificationModel } from "@models/notification.model";
+import {Request, Response, NextFunction} from "express";
+import {default_profile_picture} from "@utils/util";
+import {ManagerModel} from "@models/manager.model";
+import {PatientModel} from "@models/patient.model";
+import {DateTime} from "luxon";
+import {NotificationModel} from "@models/notification.model";
 
 export default class ManagerController {
     public static async register(request: Request, response: Response, next: NextFunction) {
-        const { body: data } = request;
+        const {body: data} = request;
         try {
             const user = await ManagerModel.create({
                 ...data,
@@ -22,8 +22,8 @@ export default class ManagerController {
     public static async get_promotions(request: Request, response: Response, next: NextFunction) {
         try {
             const notifications = await NotificationModel.find({
-                end: { $gte: new Date() },
-            }).lean({ virtuals: true });
+                end: {$gte: new Date()},
+            }).lean({virtuals: true});
             response.status(200).json(notifications);
         } catch (err) {
             next(err);
@@ -31,21 +31,18 @@ export default class ManagerController {
     }
 
     public static async create_promotion(
-        request: Request<
-            {},
-            {
-                message: string;
-                start: string;
-                end: string;
-                type: "promotion";
-            }
-        >,
+        request: Request<{}, {
+            message: string;
+            start: string;
+            end: string;
+            type: "promotion";
+        }>,
         response: Response,
         next: NextFunction
     ) {
-        const { message, start, end } = request.body;
+        const {message, start, end} = request.body;
         if (!message || !start || !end) {
-            return response.status(400).json({ message: "missing fields" });
+            return response.status(400).json({message: "missing fields"});
         }
 
         try {
@@ -57,7 +54,7 @@ export default class ManagerController {
             });
 
             await PatientModel.updateMany(
-                { status: "active" },
+                {status: "active"},
                 {
                     $push: {
                         notifications: {
@@ -67,7 +64,7 @@ export default class ManagerController {
                     },
                 }
             );
-            response.status(200).json(notification.toObject({ virtuals: true }));
+            response.status(200).json(notification.toObject({virtuals: true}));
         } catch (err) {
             next(err);
         }

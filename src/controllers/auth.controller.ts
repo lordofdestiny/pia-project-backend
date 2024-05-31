@@ -1,7 +1,7 @@
 import passport from "passport";
-import { Types } from "mongoose";
-import { Request, Response, NextFunction } from "express";
-import { UserModel } from "@models/user.model";
+import {Types} from "mongoose";
+import {Request, Response, NextFunction} from "express";
+import {UserModel} from "@models/user.model";
 
 interface IChangePasswordBody {
     username?: string;
@@ -16,17 +16,17 @@ export default class AuthController {
         response: Response,
         next: NextFunction
     ) {
-        return passport.authenticate(strategy, (err, user, info) => {
+        return passport.authenticate(strategy, (err: Error, user, info) => {
             if (err) return next(err);
             if (!user) {
                 return response.status(401).json(info);
             }
             if (request.isAuthenticated?.()) {
-                return response.status(409).json({ message: "already logged in" });
+                return response.status(409).json({message: "already logged in"});
             }
             request.logIn(user, (err) => {
                 if (err) return next(err);
-                response.status(200).json({ message: "logged in", user });
+                response.status(200).json({message: "logged in", user});
             });
         })(request, response, next);
     }
@@ -41,15 +41,13 @@ export default class AuthController {
 
     public static async logout(request: Request, response: Response, next: NextFunction) {
         request.logout(
-            {
-                keepSessionInfo: false,
-            },
+            {keepSessionInfo: false,},
             (err) => {
                 if (err) return next(err);
                 request.session!.destroy((err) => {
                     if (err) return next(err);
                     response.clearCookie("connect.sid");
-                    response.status(200).json({ message: "logged out" });
+                    response.status(200).json({message: "logged out"});
                 });
             }
         );
@@ -61,27 +59,27 @@ export default class AuthController {
         next: NextFunction
     ) {
         const id = request?.user?.id;
-        const { username, old_password, new_password } = request!.body;
+        const {username, old_password, new_password} = request?.body;
         if (
             (id == undefined && username === undefined) ||
             old_password == undefined ||
             new_password == undefined
         ) {
-            return response.status(400).json({ message: "old and new password are required" });
+            return response.status(400).json({message: "old and new password are required"});
         }
         const getUserPromise = id
             ? UserModel.findById(new Types.ObjectId(id))
-            : UserModel.findOne({ username });
+            : UserModel.findOne({username});
         try {
             const user = await getUserPromise;
             if (!user) {
-                return response.status(404).json({ message: "user not found" });
+                return response.status(404).json({message: "user not found"});
             }
             if (!(await user!.comparePassword(old_password))) {
-                return response.status(403).json({ message: "old password incorrect" });
+                return response.status(403).json({message: "old password incorrect"});
             }
             user!.password = new_password;
-            await user!.save({ validateModifiedOnly: true });
+            await user!.save({validateModifiedOnly: true});
             request.logout(
                 {
                     keepSessionInfo: false,
@@ -91,7 +89,7 @@ export default class AuthController {
                     request.session!.destroy((err) => {
                         if (err) return next(err);
                         response.clearCookie("connect.sid");
-                        response.status(200).json({ message: "password updated. logged out" });
+                        response.status(200).json({message: "password updated. logged out"});
                     });
                 }
             );
@@ -105,14 +103,14 @@ export default class AuthController {
         response: Response,
         next: NextFunction
     ) {
-        const { type, value } = request.body;
+        const {type, value} = request.body;
         try {
             const user = await UserModel.findOne({
                 [type]: value,
             }).lean();
-            response.json({ unique: user == null });
+            response.json({unique: user == null});
         } catch {
-            response.json({ unique: false });
+            response.json({unique: false});
         }
     }
 }

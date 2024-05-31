@@ -1,19 +1,19 @@
 import os from "node:os";
 import path from "node:path";
 import QRCode from "qrcode";
-import { nanoid } from "nanoid";
-import { DateTime } from "luxon";
-import { ObjectId } from "mongodb";
+import {nanoid} from "nanoid";
+import {DateTime} from "luxon";
+import {ObjectId} from "mongodb";
 import nodemailer from "nodemailer";
-import { Document, Types } from "mongoose";
-import { mkdir, readFile } from "node:fs/promises";
-import { create as createPDF } from "pdf-creator-node";
-import { Request, Response, NextFunction } from "express";
-import { AppointmentModel, IAppointment } from "@models/appointment.model";
-import { DoctorModel, IDoctor } from "@models/doctor.model";
-import { IExamination } from "@models/examination.model";
-import { IPatient, PatientModel } from "@models/patient.model";
-import { NotificationModel } from "@models/notification.model";
+import {Document, Types} from "mongoose";
+import {mkdir, readFile} from "node:fs/promises";
+import {create as createPDF} from "pdf-creator-node";
+import {Request, Response, NextFunction} from "express";
+import {AppointmentModel, IAppointment} from "@models/appointment.model";
+import {DoctorModel, IDoctor} from "@models/doctor.model";
+import {IExamination} from "@models/examination.model";
+import {IPatient, PatientModel} from "@models/patient.model";
+import {NotificationModel} from "@models/notification.model";
 
 export class AppointmentsController {
     public static async get_patient_appointments(
@@ -30,8 +30,8 @@ export class AppointmentsController {
         }
         try {
             const appointments = await AppointmentModel.find({
-                patient: new Types.ObjectId(request.params.id),
-            })
+                    patient: new Types.ObjectId(request.params.id),
+                })
                 .select("-reportPath")
                 .populate({
                     path: "doctor",
@@ -45,7 +45,7 @@ export class AppointmentsController {
                     path: "examination",
                     select: "name duration",
                 })
-                .lean({ virtuals: true });
+                .lean({virtuals: true});
             response.json(appointments);
         } catch (error) {
             next(error);
@@ -66,8 +66,8 @@ export class AppointmentsController {
         }
         try {
             const appointments = await AppointmentModel.find({
-                doctor: new Types.ObjectId(request.params.id),
-            })
+                    doctor: new Types.ObjectId(request.params.id),
+                })
                 .select("-reportPath")
                 .populate({
                     path: "patient",
@@ -76,7 +76,7 @@ export class AppointmentsController {
                 .populate({
                     path: "examination",
                 })
-                .lean({ virtuals: true });
+                .lean({virtuals: true});
             response.json(appointments);
         } catch (error) {
             next(error);
@@ -103,7 +103,7 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { doctorId, patientId, examinationId, datetime } = request.body;
+        const {doctorId, patientId, examinationId, datetime} = request.body;
         if (!doctorId || !patientId || !examinationId || !datetime) {
             return response.status(400).json({
                 message: "Missing parameters",
@@ -148,7 +148,7 @@ export class AppointmentsController {
                     message: "Patient not found",
                 });
             }
-            const doctorObj = doctor.toObject({ virtuals: true });
+            const doctorObj = doctor.toObject({virtuals: true});
             const examination = (<IExamination[]>doctorObj.examinations).find(
                 (examination) => examination.id.toString() === examinationId
             );
@@ -161,7 +161,7 @@ export class AppointmentsController {
 
             const date = DateTime.fromISO(datetime).toJSDate();
             const new_start = DateTime.fromISO(datetime);
-            const new_end = new_start.plus({ minutes: examination.duration });
+            const new_end = new_start.plus({minutes: examination.duration});
 
             const minTime = DateTime.fromJSDate(date).set({
                 hour: 7,
@@ -173,7 +173,7 @@ export class AppointmentsController {
                     hour: 23,
                     minute: 0,
                 })
-                .minus({ minutes: examination.duration });
+                .minus({minutes: examination.duration});
 
             if (new_start < minTime || maxTime < new_end) {
                 return response.status(400).json({
@@ -184,7 +184,7 @@ export class AppointmentsController {
             // Check if the doctor is on vacation
             if (
                 doctorObj.vacations.some(
-                    ({ start_date, end_date }) =>
+                    ({start_date, end_date}) =>
                         date >= DateTime.fromJSDate(start_date).startOf("day").toJSDate() &&
                         date <= DateTime.fromJSDate(end_date).endOf("day").toJSDate()
                 )
@@ -195,7 +195,7 @@ export class AppointmentsController {
             }
 
             const day_appointments = (doctor.appointments as IAppointment[])
-                .filter(({ datetime }) => DateTime.fromJSDate(datetime).hasSame(new_start, "day"))
+                .filter(({datetime}) => DateTime.fromJSDate(datetime).hasSame(new_start, "day"))
                 .sort(
                     (a, b) =>
                         DateTime.fromJSDate(a.datetime).diff(DateTime.fromJSDate(b.datetime))
@@ -204,10 +204,10 @@ export class AppointmentsController {
 
             // First appointment before the requested one
             const first_before = day_appointments
-                .filter(({ datetime }) => DateTime.fromJSDate(datetime) <= new_start)
+                .filter(({datetime}) => DateTime.fromJSDate(datetime) <= new_start)
                 .at(-1);
             const first_after = day_appointments.find(
-                ({ datetime }) => DateTime.fromJSDate(datetime) > new_start
+                ({datetime}) => DateTime.fromJSDate(datetime) > new_start
             );
             const first_before_end = first_before
                 ? AppointmentsController.appointmentEnd(first_before)
@@ -267,7 +267,7 @@ export class AppointmentsController {
                 message: `You have an appointment with ${doctor.first_name} ${
                     doctor.last_name
                 } tomorrow at ${DateTime.fromJSDate(datetime).toFormat("HH:mm")}`,
-                date: DateTime.fromJSDate(datetime).minus({ days: 1 }).toJSDate(),
+                date: DateTime.fromJSDate(datetime).minus({days: 1}).toJSDate(),
                 appointment: appointment.id,
                 type: "appointment",
             });
@@ -278,22 +278,16 @@ export class AppointmentsController {
                 seen: false,
             });
             await Promise.all([
-                doctor.save({
-                    validateModifiedOnly: true,
-                }),
-                patient.save({
-                    validateModifiedOnly: true,
-                }),
+                doctor.save({validateModifiedOnly: true}),
+                patient.save({validateModifiedOnly: true}),
                 AppointmentModel.populate(appointment, {
                     path: "doctor",
                     select: "branch first_name last_name",
                 }),
-                AppointmentModel.populate(appointment, {
-                    path: "examination",
-                }),
+                AppointmentModel.populate(appointment, {path: "examination",}),
             ]);
             return response.status(201).json({
-                ...appointment.toObject({ virtuals: true }),
+                ...appointment.toObject({virtuals: true}),
                 reportPath: undefined,
             });
         } catch (error) {
@@ -308,7 +302,7 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { appointmentId: id } = request.params;
+        const {appointmentId: id} = request.params;
         if (!ObjectId.isValid(id)) {
             return response.status(400).json({
                 message: "Invalid id",
@@ -321,7 +315,7 @@ export class AppointmentsController {
                     message: "Appointment not found",
                 });
             }
-            const { doctor: doctorId, patient: patientId } = appointment as {
+            const {doctor: doctorId, patient: patientId} = appointment as {
                 doctor: ObjectId;
                 patient: ObjectId;
             };
@@ -359,8 +353,8 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { appointmentId: id } = request.params;
-        const { reason } = request.body;
+        const {appointmentId: id} = request.params;
+        const {reason} = request.body;
         if (!ObjectId.isValid(id)) {
             return response.status(400).json({
                 message: "Invalid id",
@@ -376,7 +370,7 @@ export class AppointmentsController {
                     message: "Appointment not found",
                 });
             }
-            const { doctor: doctorId, patient: patientId } = appointment as {
+            const {doctor: doctorId, patient: patientId} = appointment as {
                 doctor: ObjectId;
                 patient: ObjectId;
             };
@@ -429,7 +423,7 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { patient: patientId } = request.params;
+        const {patient: patientId} = request.params;
         if (!ObjectId.isValid(patientId)) {
             return response.sendStatus(400);
         }
@@ -453,7 +447,7 @@ export class AppointmentsController {
                         ],
                     },
                 })
-                .lean({ virtuals: true });
+                .lean({virtuals: true});
 
             if (!patient) {
                 return response.sendStatus(404);
@@ -478,7 +472,7 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { id, patient } = request.params;
+        const {id, patient} = request.params;
         if (!ObjectId.isValid(id) || !ObjectId.isValid(patient)) {
             return response.status(400).json({
                 message: "Invalid id",
@@ -510,7 +504,7 @@ export class AppointmentsController {
             if (!appointment.report) {
                 return response.sendStatus(404);
             }
-            const appointmentObj = appointment.toObject({ virtuals: true });
+            const appointmentObj = appointment.toObject({virtuals: true});
             if (!appointment?.reportPath?.generated) {
                 const path = await generatePdf([prepareReport(appointmentObj)]);
                 appointment.reportPath = {
@@ -537,7 +531,7 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { id: patientId } = request.params;
+        const {id: patientId} = request.params;
         if (!ObjectId.isValid(patientId)) {
             return response.status(400).json({
                 message: "Invalid id",
@@ -545,12 +539,12 @@ export class AppointmentsController {
         }
         try {
             const patient = await PatientModel.findById(patientId, {
-                appointments: 1,
-                first_name: 1,
-                last_name: 1,
-                username: 1,
-                email: 1,
-            })
+                    appointments: 1,
+                    first_name: 1,
+                    last_name: 1,
+                    username: 1,
+                    email: 1,
+                })
                 .populate({
                     path: "appointments",
                     match: {
@@ -573,7 +567,7 @@ export class AppointmentsController {
                         },
                     ],
                 })
-                .lean({ virtuals: true });
+                .lean({virtuals: true});
 
             response.json(patient);
         } catch (error) {
@@ -597,13 +591,13 @@ export class AppointmentsController {
         response: Response,
         next: NextFunction
     ) {
-        const { id } = request.params;
+        const {id} = request.params;
         if (!ObjectId.isValid(id)) {
             return response.status(400).json({
                 message: "Invalid id",
             });
         }
-        const { reason, diagnosis, therapy, followup } = request.body;
+        const {reason, diagnosis, therapy, followup} = request.body;
         if (!reason || !diagnosis || !therapy || !followup) {
             return response.status(400).json({
                 message: "Missing parameters",
@@ -640,7 +634,7 @@ export class AppointmentsController {
                 validateModifiedOnly: true,
             });
             const data = {
-                ...appointment.toObject({ virtuals: true }),
+                ...appointment.toObject({virtuals: true}),
                 reportPath: undefined,
             };
             response.status(200).json(data);
@@ -673,13 +667,11 @@ async function generatePdf(reports: any[]) {
     const htmlPath = path.join(__dirname, "..", "templates", "report.html");
     const html = await readFile(htmlPath, "utf8");
     const filePath = generateUniquePath();
-    await mkdir(path.dirname(filePath), { recursive: true });
+    await mkdir(path.dirname(filePath), {recursive: true});
     await createPDF(
         {
             html,
-            data: {
-                reports,
-            },
+            data: {reports,},
             path: filePath,
             type: "",
         },
@@ -693,7 +685,7 @@ async function generatePdf(reports: any[]) {
     return filePath;
 }
 
-const { SENDER_EMAIL, SENDER_PASSWORD } = process.env;
+const {SENDER_EMAIL, SENDER_PASSWORD} = process.env;
 const transporter = nodemailer.createTransport({
     host: "smtp-mail.outlook.com",
     port: 587,
@@ -711,9 +703,9 @@ const networkInterfacesDict = os.networkInterfaces();
 const ipv4 = Object.keys(networkInterfacesDict)
     .map((key) => networkInterfacesDict[key]!)
     .flat()
-    .filter(({ family }) => family === "IPv4")
-    .filter(({ internal }) => !internal)
-    .map(({ address }) => address);
+    .filter(({family}) => family === "IPv4")
+    .filter(({internal}) => !internal)
+    .map(({address}) => address);
 
 async function sendByEmail(patientMail: string, pdfPath: string) {
     const relativePath = path.relative("public", pdfPath).replace(/\\/g, "/");
@@ -733,27 +725,18 @@ async function sendByEmail(patientMail: string, pdfPath: string) {
             </div>
         `,
         attachDataUrls: true,
-        attachments: [
-            {
-                filename: "report.pdf",
-                path: pdfPath,
-            },
-        ],
+        attachments: [{filename: "report.pdf", path: pdfPath}],
     };
 
-    if (process.env.NODE_ENV === "development" &&
-        process.env.SHOW_MAIL_PREVIEW?.toLowerCase() === "yes") {
+    const {NODE_ENV, SHOW_MAIL_PREVIEW} = process.env;
+    if (NODE_ENV === "development" && SHOW_MAIL_PREVIEW?.toLowerCase() === "yes") {
         const previewEmail = await import("preview-email");
         await previewEmail.default(
-            JSON.parse(
-                (
-                    await nodemailer
-                        .createTransport({
-                            jsonTransport: true,
-                        })
-                        .sendMail(message as any)
-                ).message
-            )
+            JSON.parse((
+                await nodemailer.createTransport({
+                    jsonTransport: true,
+                }).sendMail(message as any)
+            ).message)
         );
     } else {
         try {
